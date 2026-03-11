@@ -1,12 +1,15 @@
 # Setup
 
 ## 1. Schritt
-Env Example und .env machen, url neue aus Web kopieren und User und Passwort einfügen
+Im integrierten Terminal /backend `npm i` ausführen
 
-## 2. Schritt 
+## 2. Schritt
+Env Example kopieren und neue .env machen, URL aus Web kopieren und User + Passwort durch Benutzerdaten ersetzen
+
+## 3. Schritt 
 integriertes Terminal für /backend und `node server.js` ausführen
 
-## 3. Struktur
+## 4. Struktur
 ```
 backend/
 ├── server.js                   
@@ -28,7 +31,7 @@ backend/
     └── index.js                
 ```
 
-## 4. Chat starten
+## 5. Chat starten
 1. In Postman "+" und "Socket.IO" auswählen
 2. In die URL "http://localhost:5001?token=" + jwt-Token und Connect klicken
 3. Forum beitreten: 
