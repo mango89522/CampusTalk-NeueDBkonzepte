@@ -1,0 +1,1222 @@
+{
+  "info": {
+    "_postman_id": "6f12e362-c2ef-4210-85f6-c0c16474edd2",
+    "name": "CampusTalk",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50048552",
+    "_collection_link": "https://go.postman.co/collection/50048552-6f12e362-c2ef-4210-85f6-c0c16474edd2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"mango\",\n    \"email\": \"mango@gmail.com\",\n    \"password\": \"123456aA?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/auth/register",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "const token = response.token;",
+                  "",
+                  "// 3. Schreibe den Token in eine Environment-Variable",
+                  "pm.environment.set(\"my_jwt_token\", token);",
+                  "",
+                  "console.log(\"Token wurde erfolgreich aktualisiert!\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mango@gmail.com\",\n  \"password\": \"123456aA?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/auth/login",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Me",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YjE0ZDYzMmNjM2Q2ZDA5YjU1NDRiZSIsInJvbGUiOiJTdHVkaWVyZW5kZXIiLCJpYXQiOjE3NzMyMjczOTEsImV4cCI6MTc3MzMxMzc5MX0.tmkcJ9juCqoCCnIruVMOmWcqIRmoPk0kL3DeJ0nLhak",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"mango\",\n    \"email\": \"mango@gmail.com\",\n    \"password\": \"123456aA?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/auth/me",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Login\n\n- _Output:_ Gibt einen token zurück. Dieser muss im Frontend gespeichert und bei allen geschützten Routen als **Bearer Token** im Header gesendet werden."
+    },
+    {
+      "name": "Forum",
+      "item": [
+        {
+          "name": "Create_Forum",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YjE0ZDYzMmNjM2Q2ZDA5YjU1NDRiZSIsInJvbGUiOiJTdHVkaWVyZW5kZXIiLCJpYXQiOjE3NzMyMjczOTEsImV4cCI6MTc3MzMxMzc5MX0.tmkcJ9juCqoCCnIruVMOmWcqIRmoPk0kL3DeJ0nLhak",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \n    \"title\": \"Astrofly\", \n    \"description\": \"bestes Website\", \n    \"tags\": [\"Redsame\",\"Epic Games\"] \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_All",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_By_Tag",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums?tag=Mathe",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums"
+              ],
+              "query": [
+                {
+                  "key": "tag",
+                  "value": "Mathe"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_By_Modul",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums?module=DB2",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "DB2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_By_Title",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums?search=MongoDB",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "MongoDB"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_By_ID",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update_By_ID",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Datenbanken 2 - SoSe\",\n    \"description\": \"Alles zu Übungen, Vorlesung und Prüfung\",\n    \"tags\": [\"DB2\", \"SoSe\", \"MongoDB\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete_By_ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"mango\",\n    \"email\": \"mango@gmail.com\",\n    \"password\": \"123456aA?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "Create_Post",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YjE0ZDYzMmNjM2Q2ZDA5YjU1NDRiZSIsInJvbGUiOiJTdHVkaWVyZW5kZXIiLCJpYXQiOjE3NzMyMjczOTEsImV4cCI6MTc3MzMxMzc5MX0.tmkcJ9juCqoCCnIruVMOmWcqIRmoPk0kL3DeJ0nLhak",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \n    \"title\": \"Fortnite bestes Spiel\", \n    \"content\": \"Fortnite auf die 1\", \n    \"imageUrl\": \"https://beispiel.de/buch.jpg\", \n    \"forumId\": \"69b16c2475f4fcbf8f8c7037\", \n    \"tags\": [\"Ninja\", \"Trymacs\"] \n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Posts",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Posts_By_Tag",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts?tag=MongoDB",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "tag",
+                  "value": "MongoDB"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Posts_By_Module",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts?module=DB2",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "DB2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Posts_By_Title",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts?search=Aggregation",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Aggregation"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Posts_By_Forum",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts?forumId=67cf00000000000000000001",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "forumId",
+                  "value": "67cf00000000000000000001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Posts_By_Author",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts?authorId=67cf00000000000000000002",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "authorId",
+                  "value": "67cf00000000000000000002"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Post_By_ID",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update_Post",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Update: Hilfe bei Aggregation Pipelines\",\n    \"content\": \"Lookup klappt inzwischen, Group noch nicht.\",\n    \"imageUrl\": \"https://example.com/neu.jpg\",\n    \"videoUrl\": \"https://example.com/neu.mp4\",\n    \"forumId\": \"67cf00000000000000000001\",\n    \"tags\": [\"MongoDB\", \"Update\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete_By_ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Get_Chat_History",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums/:forumId/messages",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums",
+                ":forumId",
+                "messages"
+              ],
+              "variable": [
+                {
+                  "key": "forumId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Chat_History_With_Limit",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/forums/:forumId/messages?limit=50",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "forums",
+                ":forumId",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "forumId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Private_Chat_By_User",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/private-messages/:userId",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "private-messages",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Private_Chat_By_User_With_Limit",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/private-messages/:userId?limit=50",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "private-messages",
+                ":userId"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "**Echtzeit-Kommunikation (WebSockets)**\n\nLäuft über ws://localhost:5001 mit **Socket.io**.\n\n- **Forum-Chat:**\n    \n    - Event join_forum: Tritt einem Raum bei (forumId).\n        \n    - Event send_message: Sendet Nachricht (forumId, senderId, text).\n        \n    - Event receive_message: Empfängt Nachrichten live.\n        \n- **Private Nachrichten:**\n    \n    - Event register_private: User registriert seinen Kanal (userId).\n        \n\n• • Event send_private_message: Direktnachricht an recipientId."
+    },
+    {
+      "name": "Engagement",
+      "item": [
+        {
+          "name": "Upvote",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts/:id/upvote",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":id",
+                "upvote"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Downvote",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts/:id/downvote",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":id",
+                "downvote"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Create_Comment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YjEzYmVlNGRjNWEzOGIyMTQ4ZjZmMCIsInJvbGUiOiJTdHVkaWVyZW5kZXIiLCJpYXQiOjE3NzMyMjMxMDMsImV4cCI6MTc3MzMwOTUwM30.eIDCX6hQUIeLr3LttOLUnxhS7B1UuvmKX9o38DnfcoY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Ich empfehle das Buch 'Mathe für Informatiker'!\",\n  \"postId\": \"69b13fb658ddcda0e17e880a\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/comments",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "comments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_Comments_By_Post",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts/:id/comments",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":id",
+                "comments"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update_Comment",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/comments/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "comments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete_Comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/comments/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "comments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get_Posts_By_User",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/users/:id/posts",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id",
+                "posts"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get_My_Posts",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/users/me/posts",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "me",
+                "posts"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get_All_User",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YjE0ZDYzMmNjM2Q2ZDA5YjU1NDRiZSIsInJvbGUiOiJBZG1pbmlzdHJhdG9yIiwidXNlcm5hbWUiOiJtYW5nbyIsImlhdCI6MTc3MzIzNTY0NCwiZXhwIjoxNzczMzIyMDQ0fQ.mN-OCBMT7tnnJBOJ8emPq-b98FkefwVojUguEMdYOCE",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/admin/users",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update_User_Role",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"role\": \"Administrator\"}\n// {\"role\": \"Studierender\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/admin/users/:id/role",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                ":id",
+                "role"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url_campustalk",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}
