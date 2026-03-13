@@ -1,2 +1,4 @@
 MONGODB_URI=mongodb+srv://<db_username>:<db_password>@campustalk.ar2yist.mongodb.net/
 PORT=5001
+MEDIA_IMAGE_MAX_MB=10
+MEDIA_VIDEO_MAX_MB=80

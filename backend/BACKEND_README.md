@@ -26,12 +26,27 @@ backend/
 │   ├── comments.js           
 │   ├── users.js                 
 │   ├── messages.js             
-│   └── admin.js                
+│   ├── admin.js                
+│   └── media.js                
 └── sockets/
     └── index.js                
 ```
 
-## 5. Chat starten
+## 5. Medien-Upload (Bilder/Videos)
+- Endpoint für Upload: `POST /api/media/upload` (Auth erforderlich, `multipart/form-data`, Feldname: `file`)
+- Upload-Limits über `.env`:
+    - `MEDIA_IMAGE_MAX_MB` (Standard: 10)
+    - `MEDIA_VIDEO_MAX_MB` (Standard: 80)
+- Dateiabruf: `GET /api/media/:id`
+- Optionales Löschen: `DELETE /api/media/:id` (Eigentümer oder Admin)
+- In Posts können zusätzlich zu `imageUrl`/`videoUrl` jetzt `imageMediaId`/`videoMediaId` gesetzt werden.
+    Die URL wird dann serverseitig als `/api/media/:id` erzeugt.
+- Posts unterstützen jetzt auch direkten Upload im selben Request:
+    - `POST /api/posts` mit `multipart/form-data`
+    - `PATCH /api/posts/:id` mit `multipart/form-data`
+    - Feldnamen für Dateien: `image` und `video`
+
+## 6. Chat starten
 1. In Postman "+" und "Socket.IO" auswählen
 2. In die URL "http://localhost:5001?token=" + jwt-Token und Connect klicken
 3. Forum beitreten: 

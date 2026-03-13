@@ -421,6 +421,69 @@
           "response": []
         },
         {
+          "name": "Create_Post_With_File_Upload",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{my_jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Post mit Direkt-Upload",
+                  "type": "text"
+                },
+                {
+                  "key": "content",
+                  "value": "Bild oder Video wird im selben Request hochgeladen.",
+                  "type": "text"
+                },
+                {
+                  "key": "forumId",
+                  "value": "<FORUM_ID>",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "Upload,Media",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "video",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get_Posts",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
@@ -672,6 +735,66 @@
           "response": []
         },
         {
+          "name": "Update_Post_With_File_Upload",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{my_jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Update mit Direkt-Upload",
+                  "type": "text"
+                },
+                {
+                  "key": "content",
+                  "value": "Neues Medium direkt am Post.",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "video",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Delete_By_ID",
           "request": {
             "method": "DELETE",
@@ -695,6 +818,43 @@
                   "key": "id",
                   "value": ""
                 }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create_Post_With_MediaId",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{my_jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Post mit Upload-Medium\",\n  \"content\": \"Image kommt aus GridFS\",\n  \"imageMediaId\": \"<MEDIA_ID_AUS_UPLOAD>\",\n  \"forumId\": \"<FORUM_ID>\",\n  \"tags\": [\"Upload\", \"Media\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/posts",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "posts"
               ]
             }
           },
@@ -1171,6 +1331,110 @@
                 "users",
                 ":id",
                 "role"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        {
+          "name": "Create_Upload_Media",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{my_jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/media/upload",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "media",
+                "upload"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Read_Get_Media_By_ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/media/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "media",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete_Media_By_ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{my_jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/media/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "media",
+                ":id"
               ],
               "variable": [
                 {
