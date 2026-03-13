@@ -10,8 +10,59 @@ const {
   buildCommentTree,
   deletePostWithRelations
 } = require('../utils/helpers');
+const {
+  deleteMediaFileById
+} = require('../utils/gridfs');
+const {
+  createMediaUploadMiddleware,
+  getUploadedFile,
+  resolveMediaChange
+} = require('../utils/mediaUpload');
 
 const router = express.Router();
+const uploadPostMedia = createMediaUploadMiddleware([
+  { name: 'image', maxCount: 1 },
+  { name: 'video', maxCount: 1 }
+]);
+
+function applyResolvedMediaChange(post, resolvedChange, mediaIdField, mediaUrlField) {
+  if (!resolvedChange.changed) {
+    return;
+  }
+
+  post[mediaIdField] = resolvedChange.nextMediaId;
+  post[mediaUrlField] = resolvedChange.nextMediaUrl;
+}
+
+async function cleanupUploadedMediaIds(mediaIds) {
+  if (mediaIds.length === 0) {
+    return;
+  }
+
+  await Promise.allSettled(mediaIds.map((mediaId) => deleteMediaFileById(mediaId)));
+}
+
+async function cleanupReplacedMedia(post, imageChange, videoChange) {
+  const mediaIdsToDelete = [];
+
+  if (
+    imageChange.changed &&
+    post.imageMediaId &&
+    String(post.imageMediaId) !== String(imageChange.nextMediaId || '')
+  ) {
+    mediaIdsToDelete.push(post.imageMediaId);
+  }
+
+  if (
+    videoChange.changed &&
+    post.videoMediaId &&
+    String(post.videoMediaId) !== String(videoChange.nextMediaId || '')
+  ) {
+    mediaIdsToDelete.push(post.videoMediaId);
+  }
+
+  await Promise.allSettled(mediaIdsToDelete.map((mediaId) => deleteMediaFileById(mediaId)));
+}
 
 router.get('/', async (req, res) => {
   try {
@@ -85,9 +136,11 @@ router.get('/:id/comments', async (req, res) => {
   }
 });
 
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, uploadPostMedia, async (req, res) => {
+  const uploadedMediaIds = [];
+
   try {
-    const { title, content, imageUrl, videoUrl, forumId, tags } = req.body;
+    const { title, content, imageUrl, videoUrl, imageMediaId, videoMediaId, forumId, tags } = req.body;
 
     if (!title || !content || !forumId) {
       return res.status(400).json({ message: 'Titel, Inhalt und Forum sind erforderlich' });
@@ -101,12 +154,43 @@ router.post('/', auth, async (req, res) => {
     const newPost = new Post({
       title: title.trim(),
       content: content.trim(),
-      imageUrl,
-      videoUrl,
       tags: normalizeTags(tags),
       author: req.user.id,
       forum: forumId
     });
+
+    const imageChange = await resolveMediaChange({
+      req,
+      res,
+      mediaIdInput: imageMediaId,
+      mediaUrlInput: imageUrl,
+      uploadedFile: getUploadedFile(req, 'image'),
+      expectedType: 'image',
+      label: 'Bild'
+    });
+    if (!imageChange.ok) {
+      await cleanupUploadedMediaIds(uploadedMediaIds);
+      return;
+    }
+    if (imageChange.uploadedNewMediaId) uploadedMediaIds.push(imageChange.uploadedNewMediaId);
+
+    const videoChange = await resolveMediaChange({
+      req,
+      res,
+      mediaIdInput: videoMediaId,
+      mediaUrlInput: videoUrl,
+      uploadedFile: getUploadedFile(req, 'video'),
+      expectedType: 'video',
+      label: 'Video'
+    });
+    if (!videoChange.ok) {
+      await cleanupUploadedMediaIds(uploadedMediaIds);
+      return;
+    }
+    if (videoChange.uploadedNewMediaId) uploadedMediaIds.push(videoChange.uploadedNewMediaId);
+
+    applyResolvedMediaChange(newPost, imageChange, 'imageMediaId', 'imageUrl');
+    applyResolvedMediaChange(newPost, videoChange, 'videoMediaId', 'videoUrl');
 
     const savedPost = await newPost.save();
     const populatedPost = await Post.findById(savedPost._id)
@@ -115,11 +199,14 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json(populatedPost);
   } catch (err) {
+    await cleanupUploadedMediaIds(uploadedMediaIds);
     res.status(400).json({ message: err.message });
   }
 });
 
-router.patch('/:id', auth, async (req, res) => {
+router.patch('/:id', auth, uploadPostMedia, async (req, res) => {
+  const uploadedMediaIds = [];
+
   try {
     if (!ensureObjectId(res, req.params.id, 'Post-ID')) return;
 
@@ -131,7 +218,7 @@ router.patch('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Du darfst diesen Post nicht bearbeiten' });
     }
 
-    const { title, content, imageUrl, videoUrl, forumId, tags } = req.body;
+    const { title, content, imageUrl, videoUrl, imageMediaId, videoMediaId, forumId, tags } = req.body;
 
     if (title !== undefined) {
       if (!title.trim()) return res.status(400).json({ message: 'Der Titel darf nicht leer sein' });
@@ -150,11 +237,50 @@ router.patch('/:id', auth, async (req, res) => {
       post.forum = forumId;
     }
 
-    if (imageUrl !== undefined) post.imageUrl = imageUrl;
-    if (videoUrl !== undefined) post.videoUrl = videoUrl;
+    const previousImageMediaId = post.imageMediaId;
+    const previousVideoMediaId = post.videoMediaId;
+
+    const imageChange = await resolveMediaChange({
+      req,
+      res,
+      mediaIdInput: imageMediaId,
+      mediaUrlInput: imageUrl,
+      uploadedFile: getUploadedFile(req, 'image'),
+      expectedType: 'image',
+      label: 'Bild'
+    });
+    if (!imageChange.ok) {
+      await cleanupUploadedMediaIds(uploadedMediaIds);
+      return;
+    }
+    if (imageChange.uploadedNewMediaId) uploadedMediaIds.push(imageChange.uploadedNewMediaId);
+
+    const videoChange = await resolveMediaChange({
+      req,
+      res,
+      mediaIdInput: videoMediaId,
+      mediaUrlInput: videoUrl,
+      uploadedFile: getUploadedFile(req, 'video'),
+      expectedType: 'video',
+      label: 'Video'
+    });
+    if (!videoChange.ok) {
+      await cleanupUploadedMediaIds(uploadedMediaIds);
+      return;
+    }
+    if (videoChange.uploadedNewMediaId) uploadedMediaIds.push(videoChange.uploadedNewMediaId);
+
+    applyResolvedMediaChange(post, imageChange, 'imageMediaId', 'imageUrl');
+    applyResolvedMediaChange(post, videoChange, 'videoMediaId', 'videoUrl');
+
     if (tags !== undefined) post.tags = normalizeTags(tags);
 
     await post.save();
+    await cleanupReplacedMedia(
+      { imageMediaId: previousImageMediaId, videoMediaId: previousVideoMediaId },
+      imageChange,
+      videoChange
+    );
 
     const populatedPost = await Post.findById(post._id)
       .populate('author', 'username role')
@@ -162,6 +288,7 @@ router.patch('/:id', auth, async (req, res) => {
 
     res.json(populatedPost);
   } catch (err) {
+    await cleanupUploadedMediaIds(uploadedMediaIds);
     res.status(400).json({ message: err.message });
   }
 });

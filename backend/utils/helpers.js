@@ -3,6 +3,7 @@ const Comment = require('../models/Comment');
 const Post = require('../models/Post');
 const Forum = require('../models/Forum');
 const Message = require('../models/Message');
+const { deleteMediaFileById } = require('./gridfs');
 
 function isAdmin(user) {
   return user.role === 'Administrator';
@@ -100,13 +101,26 @@ async function deleteCommentThread(rootCommentId) {
 }
 
 async function deletePostWithRelations(postId) {
+  const post = await Post.findById(postId).select('imageMediaId videoMediaId');
+
+  if (post) {
+    const mediaIds = [post.imageMediaId, post.videoMediaId].filter(Boolean);
+    await Promise.allSettled(mediaIds.map((mediaId) => deleteMediaFileById(mediaId)));
+  }
+
   await Comment.deleteMany({ post: postId });
   await Post.findByIdAndDelete(postId);
 }
 
 async function deleteForumWithRelations(forumId) {
-  const postsInForum = await Post.find({ forum: forumId }).select('_id');
+  const postsInForum = await Post.find({ forum: forumId }).select('_id imageMediaId videoMediaId');
   const postIds = postsInForum.map((post) => post._id);
+
+  const mediaIds = postsInForum
+    .flatMap((post) => [post.imageMediaId, post.videoMediaId])
+    .filter(Boolean);
+
+  await Promise.allSettled(mediaIds.map((mediaId) => deleteMediaFileById(mediaId)));
 
   if (postIds.length > 0) {
     await Comment.deleteMany({ post: { $in: postIds } });

@@ -5,6 +5,8 @@ const PostSchema = new mongoose.Schema({
   content: { type: String, required: true },
   imageUrl: { type: String },
   videoUrl: { type: String },
+  imageMediaId: { type: mongoose.Schema.Types.ObjectId },
+  videoMediaId: { type: mongoose.Schema.Types.ObjectId },
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   forum: { type: mongoose.Schema.Types.ObjectId, ref: 'Forum', required: true },
   // Die neuen Felder für die Abstimmung:

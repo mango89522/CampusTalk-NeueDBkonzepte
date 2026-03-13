@@ -15,6 +15,7 @@ const commentRoutes = require('./routes/comments');
 const userRoutes = require('./routes/users');
 const messageRoutes = require('./routes/messages');
 const adminRoutes = require('./routes/admin');
+const mediaRoutes = require('./routes/media');
 const setupSockets = require('./sockets/index');
 
 const PORT = process.env.PORT || 5001;
@@ -51,6 +52,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/private-messages', messageRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/media', mediaRoutes);
 
 // --- WEBSOCKETS ---
 io.use((socket, next) => {
