@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "6f12e362-c2ef-4210-85f6-c0c16474edd2",
+    "_postman_id": "4f2d0590-6612-4174-a935-39c33c11d9eb",
     "name": "CampusTalk",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "50048552",
-    "_collection_link": "https://go.postman.co/collection/50048552-6f12e362-c2ef-4210-85f6-c0c16474edd2?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/50048552-4f2d0590-6612-4174-a935-39c33c11d9eb?source=collection_link"
   },
   "item": [
     {
@@ -49,8 +49,7 @@
                   "",
                   "const token = response.token;",
                   "",
-                  "// 3. Schreibe den Token in eine Environment-Variable",
-                  "pm.environment.set(\"my_jwt_token\", token);",
+                  "pm.collectionVariables.set(\"my_jwt_token\", token);",
                   "",
                   "console.log(\"Token wurde erfolgreich aktualisiert!\");"
                 ],
@@ -461,12 +460,12 @@
                 {
                   "key": "image",
                   "type": "file",
-                  "src": ""
+                  "value": ""
                 },
                 {
                   "key": "video",
                   "type": "file",
-                  "src": ""
+                  "value": ""
                 }
               ]
             },
@@ -765,12 +764,12 @@
                 {
                   "key": "image",
                   "type": "file",
-                  "src": ""
+                  "value": ""
                 },
                 {
                   "key": "video",
                   "type": "file",
-                  "src": ""
+                  "value": ""
                 }
               ]
             },
@@ -1368,7 +1367,7 @@
                 {
                   "key": "file",
                   "type": "file",
-                  "src": ""
+                  "value": ""
                 }
               ]
             },
@@ -1479,7 +1478,7 @@
       "value": ""
     },
     {
-      "key": "token",
+      "key": "my_jwt_token",
       "value": ""
     }
   ]
