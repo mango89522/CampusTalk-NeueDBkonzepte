@@ -8,6 +8,7 @@ import ForumDetailPage from './pages/ForumDetailPage'
 import PostDetailPage from './pages/PostDetailPage'
 import CreateForumPage from './pages/CreateForumPage'
 import CreatePostPage from './pages/CreatePostPage'
+import EditPostPage from './pages/EditPostPage'
 import ProfilePage from './pages/ProfilePage'
 import AdminPage from './pages/AdminPage'
 import PrivateMessagesPage from './pages/PrivateMessagesPage'
@@ -26,6 +27,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="forums/new" element={<CreateForumPage />} />
           <Route path="posts/new" element={<CreatePostPage />} />
+          <Route path="posts/:id/edit" element={<EditPostPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="messages" element={<PrivateMessagesPage />} />
         </Route>

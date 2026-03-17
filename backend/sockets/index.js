@@ -86,7 +86,8 @@ function setupSockets(io) {
         const newMessage = new PrivateMessage({
           sender: socket.user.id,
           recipient: recipientId,
-          text: text.trim()
+          text: text.trim(),
+          readAt: null
         });
 
         await newMessage.save();

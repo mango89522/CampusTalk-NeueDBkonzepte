@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import { API_BASE_URL } from '../api/client'
 import { forumApi } from '../api/services'
@@ -11,14 +11,27 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [error, setError] = useState('')
+  const socketRef = useRef(null)
+  const scrollRef = useRef(null)
 
-  const socket = useMemo(() => {
-    if (!isLoggedIn || !token || !forumId) return null
-    return io(SOCKET_URL, {
-      auth: { token },
-      transports: ['websocket'],
-    })
-  }, [forumId, token, isLoggedIn])
+  const getMessageKey = useMemo(() => {
+    return (message) => {
+      if (!message) return ''
+      return String(message._id || message.id || `${message.senderId || ''}:${message.createdAt || ''}:${message.text || ''}`)
+    }
+  }, [])
+
+  const mergeMessages = useMemo(() => {
+    return (incoming) => {
+      setMessages((prev) => {
+        const map = new Map(prev.map((entry) => [getMessageKey(entry), entry]))
+        incoming.forEach((entry) => {
+          map.set(getMessageKey(entry), entry)
+        })
+        return Array.from(map.values()).sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
+      })
+    }
+  }, [getMessageKey])
 
   useEffect(() => {
     if (!isLoggedIn || !forumId) return
@@ -27,7 +40,7 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
     const loadHistory = async () => {
       try {
         const { data } = await forumApi.messages(forumId)
-        if (isMounted) setMessages(data)
+        if (isMounted) mergeMessages(data)
       } catch (apiError) {
         if (isMounted) setError(getApiErrorMessage(apiError, 'Chat-Verlauf konnte nicht geladen werden'))
       }
@@ -38,15 +51,21 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
     return () => {
       isMounted = false
     }
-  }, [forumId, isLoggedIn])
+  }, [forumId, isLoggedIn, mergeMessages])
 
   useEffect(() => {
-    if (!socket) return undefined
+    if (!isLoggedIn || !token || !forumId) return undefined
+
+    const socket = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket'],
+    })
+    socketRef.current = socket
 
     socket.emit('join_forum', forumId)
 
     const onReceive = (message) => {
-      setMessages((prev) => [...prev, message])
+      mergeMessages([message])
     }
 
     const onSocketError = (payload) => {
@@ -60,43 +79,51 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
       socket.off('receive_message', onReceive)
       socket.off('socket_error', onSocketError)
       socket.disconnect()
+      socketRef.current = null
     }
-  }, [forumId, socket])
+  }, [forumId, isLoggedIn, token, mergeMessages])
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [messages])
 
   const sendMessage = (event) => {
     event.preventDefault()
-    if (!socket || !text.trim()) return
+    const messageText = text.trim()
+    if (!socketRef.current || !messageText) return
 
-    socket.emit('send_message', { forumId, text })
+    socketRef.current.emit('send_message', { forumId, text: messageText })
     setText('')
   }
 
   if (!isLoggedIn) {
-    return <p className="muted">Für den Live-Chat bitte einloggen.</p>
+    return <p className="rounded-xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-4 text-neutral-600">Fuer den Live-Chat bitte einloggen.</p>
   }
 
   return (
-    <section className="card chat-panel">
-      <h3>Live-Chat</h3>
-      {error && <p className="error-text">{error}</p>}
+    <section className="space-y-3 rounded-2xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-5 shadow-sm">
+      <h3 className="font-['Space_Grotesk'] text-2xl leading-tight font-bold tracking-tight text-neutral-900">Live-Chat</h3>
+      {error && <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>}
 
-      <div className="chat-list">
+      <div className="flex min-h-[250px] max-h-[420px] flex-col gap-2 overflow-y-auto pr-1">
         {messages.map((message) => (
-          <div key={message._id || message.id} className="chat-msg">
-            <strong>{message.sender?.username || message.senderUsername || 'User'}</strong>
-            <p>{message.text}</p>
-            <span>{toLocalDateTime(message.createdAt)}</span>
+          <div key={message._id || message.id} className="rounded-xl border border-neutral-300 bg-white p-3">
+            <strong className="text-neutral-900">{message.sender?.username || message.senderUsername || 'User'}</strong>
+            <p className="my-1 text-neutral-800">{message.text}</p>
+            <span className="text-xs text-neutral-600">{toLocalDateTime(message.createdAt)}</span>
           </div>
         ))}
+        <div ref={scrollRef} />
       </div>
 
-      <form onSubmit={sendMessage} className="inline-form">
+      <form onSubmit={sendMessage} className="flex flex-wrap gap-2">
         <input
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder="Nachricht eingeben"
+          className="min-w-[220px] flex-1 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
         />
-        <button type="submit">Senden</button>
+        <button type="submit" className="rounded-xl border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:-translate-y-0.5">Senden</button>
       </form>
     </section>
   )

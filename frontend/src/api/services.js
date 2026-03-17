@@ -35,9 +35,11 @@ export const commentApi = {
 export const userApi = {
   myPosts: () => api.get('/users/me/posts'),
   postsByUserId: (id) => api.get(`/users/${id}/posts`),
+  search: (query, limit = 15) => api.get('/users/search', { params: { q: query, limit } }),
 }
 
 export const privateMessageApi = {
+  conversations: (limit = 100) => api.get('/private-messages/conversations', { params: { limit } }),
   conversation: (userId, limit = 100) => api.get(`/private-messages/${userId}`, { params: { limit } }),
 }
 

@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
   line-height: 1.45;
@@ -21,4 +23,22 @@ body,
 
 body {
   min-width: 320px;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+    background:
+      radial-gradient(circle at 85% 15%, #f0d6ba 0%, transparent 45%),
+      radial-gradient(circle at 10% 90%, #d5e9df 0%, transparent 48%),
+      linear-gradient(155deg, #f8f7f2, #efebe3);
+    color: #1f1f1f;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  }
 }

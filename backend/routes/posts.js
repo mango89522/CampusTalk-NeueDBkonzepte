@@ -302,6 +302,10 @@ router.patch('/:id/upvote', auth, async (req, res) => {
 
     if (!post) return res.status(404).json({ message: 'Post nicht gefunden' });
 
+    if (String(post.author) === String(userId)) {
+      return res.status(403).json({ message: 'Eigene Posts koennen nicht bewertet werden' });
+    }
+
     if (post.upvotes.some((id) => String(id) === String(userId))) {
       post.upvotes.pull(userId);
     } else {
@@ -324,6 +328,10 @@ router.patch('/:id/downvote', auth, async (req, res) => {
     const userId = req.user.id;
 
     if (!post) return res.status(404).json({ message: 'Post nicht gefunden' });
+
+    if (String(post.author) === String(userId)) {
+      return res.status(403).json({ message: 'Eigene Posts koennen nicht bewertet werden' });
+    }
 
     if (post.downvotes.some((id) => String(id) === String(userId))) {
       post.downvotes.pull(userId);
