@@ -14,27 +14,34 @@ function CommentNode({ comment, depth, isLoggedIn, onReply }) {
   }
 
   return (
-    <div className="comment-node" style={{ marginLeft: `${depth * 18}px` }}>
-      <div className="comment-card">
-        <p>{comment.content}</p>
-        <p className="muted">
+    <div className="mt-2" style={{ marginLeft: `${depth * 18}px` }}>
+      <div className="rounded-xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-3">
+        <p className="text-neutral-800">{comment.content}</p>
+        <p className="text-sm text-neutral-600">
           {comment.author?.username || 'Unbekannt'} · {toLocalDateTime(comment.createdAt)}
         </p>
         {isLoggedIn && (
-          <button type="button" className="link-button" onClick={() => setIsReplyOpen((prev) => !prev)}>
+          <button
+            type="button"
+            className="mt-1 text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
+            onClick={() => setIsReplyOpen((prev) => !prev)}
+          >
             Antworten
           </button>
         )}
 
         {isReplyOpen && (
-          <form onSubmit={submitReply} className="inline-form">
+          <form onSubmit={submitReply} className="mt-2 flex flex-wrap gap-2">
             <textarea
               value={replyText}
               onChange={(event) => setReplyText(event.target.value)}
               rows={2}
               placeholder="Antwort schreiben"
+              className="min-w-[220px] flex-1 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
             />
-            <button type="submit">Antwort senden</button>
+            <button type="submit" className="rounded-xl border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:-translate-y-0.5">
+              Antwort senden
+            </button>
           </form>
         )}
       </div>
@@ -54,11 +61,11 @@ function CommentNode({ comment, depth, isLoggedIn, onReply }) {
 
 function CommentTree({ comments, isLoggedIn, onReply }) {
   if (!comments.length) {
-    return <p className="muted">Noch keine Kommentare.</p>
+    return <p className="text-neutral-600">Noch keine Kommentare.</p>
   }
 
   return (
-    <div className="comment-tree">
+    <div>
       {comments.map((comment) => (
         <CommentNode
           key={comment._id}

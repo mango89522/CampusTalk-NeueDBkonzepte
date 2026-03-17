@@ -5,7 +5,7 @@ function ProtectedRoute({ requireAdmin = false }) {
   const { isLoggedIn, isAdmin, isAuthReady } = useAuth()
 
   if (!isAuthReady) {
-    return <div className="center-message">Lade Sitzung...</div>
+    return <div className="grid min-h-[40vh] place-content-center text-neutral-600">Lade Sitzung...</div>
   }
 
   if (!isLoggedIn) {
