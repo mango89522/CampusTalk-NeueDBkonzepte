@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema({
     enum: ['Studierender', 'Administrator'], 
     default: 'Studierender' 
   },
+  subscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Forum' }],
   createdAt: { type: Date, default: Date.now }
 });
 

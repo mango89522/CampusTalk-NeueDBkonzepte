@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { forumApi, postApi } from '../api/services'
+import { forumApi, postApi, userApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
 import PostCard from '../components/PostCard'
 import { useAuth } from '../hooks/useAuth'
@@ -9,6 +9,8 @@ function HomePage() {
   const { isLoggedIn, isAdmin, user } = useAuth()
   const [forums, setForums] = useState([])
   const [posts, setPosts] = useState([])
+  const [subscribedForums, setSubscribedForums] = useState([])
+  const [subscribedPosts, setSubscribedPosts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
@@ -32,12 +34,28 @@ function HomePage() {
 
       setForums(forumsRes.data)
       setPosts(postsRes.data)
+
+      if (isLoggedIn) {
+        const { data: subscriptionsData } = await userApi.mySubscriptions()
+        setSubscribedForums(subscriptionsData)
+
+        if (subscriptionsData.length > 0) {
+          const forumIds = subscriptionsData.map((entry) => entry._id || entry.id).join(',')
+          const { data: subscribedPostsData } = await postApi.list({ forumIds })
+          setSubscribedPosts(subscribedPostsData)
+        } else {
+          setSubscribedPosts([])
+        }
+      } else {
+        setSubscribedForums([])
+        setSubscribedPosts([])
+      }
     } catch (apiError) {
       setError(getApiErrorMessage(apiError, 'Inhalte konnten nicht geladen werden'))
     } finally {
       setIsLoading(false)
     }
-  }, [appliedSearch])
+  }, [appliedSearch, isLoggedIn])
 
   useEffect(() => {
     loadData()
@@ -85,6 +103,7 @@ function HomePage() {
 
   const activeForums = useMemo(() => {
     const latestPostByForum = new Map()
+    const hasActiveFilter = Boolean(appliedSearch.trim() || normalizedTag)
 
     filteredPosts.forEach((post) => {
       const forumId = post.forum?._id || post.forum
@@ -99,21 +118,29 @@ function HomePage() {
     })
 
     return filteredForums
-      .filter((forum) => latestPostByForum.has(String(forum._id)))
       .map((forum) => ({
         forum,
-        lastPostAt: latestPostByForum.get(String(forum._id)).createdAtMs,
+        lastPostAt: latestPostByForum.get(String(forum._id))?.createdAtMs || 0,
       }))
       .sort((a, b) => b.lastPostAt - a.lastPostAt)
-      .slice(0, 5)
+      .slice(0, hasActiveFilter ? filteredForums.length : 5)
       .map((entry) => entry.forum)
-  }, [filteredForums, filteredPosts])
+  }, [filteredForums, filteredPosts, appliedSearch, normalizedTag])
 
   const newestPosts = useMemo(() => {
     return [...filteredPosts]
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
       .slice(0, 5)
   }, [filteredPosts])
+
+  const newestSubscribedPosts = useMemo(() => {
+    const forumIdSet = new Set(subscribedForums.map((entry) => String(entry._id || entry.id)))
+
+    return [...subscribedPosts]
+      .filter((post) => forumIdSet.has(String(post.forum?._id || post.forum)))
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5)
+  }, [subscribedPosts, subscribedForums])
 
   const vote = async (postId, type) => {
     try {
@@ -136,13 +163,23 @@ function HomePage() {
   }, [isAdmin, user])
 
   const deletePost = async (postId) => {
-    if (!window.confirm('Post wirklich loeschen?')) return
+    if (!window.confirm('Post wirklich löschen?')) return
 
     try {
       await postApi.remove(postId)
       setPosts((prev) => prev.filter((post) => String(post._id) !== String(postId)))
     } catch (apiError) {
-      setError(getApiErrorMessage(apiError, 'Post konnte nicht geloescht werden'))
+      setError(getApiErrorMessage(apiError, 'Post konnte nicht gelöscht werden'))
+    }
+  }
+
+  const reportPost = async (post) => {
+    const reason = window.prompt('Warum möchtest du diesen Post melden? (optional)') || ''
+
+    try {
+      await postApi.report(post._id, reason)
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Post konnte nicht gemeldet werden'))
     }
   }
 
@@ -169,7 +206,7 @@ function HomePage() {
       <div className="rounded-2xl border border-emerald-200 bg-[radial-gradient(circle_at_top_right,rgba(10,127,102,0.10),transparent_52%),rgba(255,253,248,0.95)] p-6 shadow-sm md:p-8">
         <h1 className="font-['Space_Grotesk'] text-4xl leading-tight font-bold tracking-tight text-neutral-900 md:text-5xl">CampusTalk</h1>
         <p className="mt-3 max-w-3xl text-neutral-700">
-          Diskutiere Module, Pruefungen und Campus-Themen in Foren und chatte live mit anderen Studierenden.
+          Diskutiere Module, Prüfungen und Campus-Themen in Foren und chatte live mit anderen Studierenden.
         </p>
       </div>
 
@@ -194,7 +231,7 @@ function HomePage() {
           />
 
           {isTagMenuOpen && tagSuggestions.length > 0 && (
-            <div className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-30 flex max-h-56 flex-col overflow-y-auto rounded-xl border border-neutral-300 bg-white shadow-lg" role="listbox" aria-label="Tag Vorschlaege">
+            <div className="absolute top-[calc(100%+0.35rem)] right-0 left-0 z-30 flex max-h-56 flex-col overflow-y-auto rounded-xl border border-neutral-300 bg-white shadow-lg" role="listbox" aria-label="Tag Vorschläge">
               {tagSuggestions.map((suggestion) => (
                 <button
                   key={suggestion}
@@ -213,7 +250,7 @@ function HomePage() {
         <div className="flex flex-wrap gap-2 md:justify-end">
           <button type="submit" className="rounded-xl border border-emerald-500 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800 transition hover:-translate-y-0.5">Filtern</button>
           {tag && (
-            <button type="button" onClick={clearTag} className="rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 transition hover:-translate-y-0.5 hover:border-emerald-400">Tag loeschen</button>
+            <button type="button" onClick={clearTag} className="rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 transition hover:-translate-y-0.5 hover:border-emerald-400">Tag löschen</button>
           )}
         </div>
       </form>
@@ -262,12 +299,35 @@ function HomePage() {
                 canManage={canManagePost(post)}
                 editPath={`/posts/${post._id}/edit`}
                 onDelete={deletePost}
+                onReport={isLoggedIn && !canManagePost(post) ? reportPost : undefined}
                 compact
               />
             ))}
             {!newestPosts.length && <p className="text-neutral-600">Keine Posts gefunden.</p>}
           </section>
         </div>
+      )}
+
+      {!isLoading && isLoggedIn && (
+        <section className="space-y-4 rounded-2xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-5 shadow-sm">
+          <h2 className="font-['Space_Grotesk'] text-3xl leading-tight font-bold tracking-tight text-neutral-900">Aus deinen abonnierten Foren</h2>
+          {!newestSubscribedPosts.length && <p className="text-neutral-600">Keine neuen Posts in deinen Abos.</p>}
+          {newestSubscribedPosts.map((post) => (
+            <PostCard
+              key={`sub-${post._id}`}
+              post={post}
+              currentUserId={user?.id || user?._id}
+              canVote={isLoggedIn}
+              onUpvote={(postId) => vote(postId, 'up')}
+              onDownvote={(postId) => vote(postId, 'down')}
+              canManage={canManagePost(post)}
+              editPath={`/posts/${post._id}/edit`}
+              onDelete={deletePost}
+              onReport={isLoggedIn && !canManagePost(post) ? reportPost : undefined}
+              compact
+            />
+          ))}
+        </section>
       )}
     </section>
   )

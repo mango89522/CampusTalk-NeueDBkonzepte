@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { forumApi, postApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
@@ -78,7 +78,7 @@ function EditPostPage() {
 
       <form onSubmit={onSubmit} className="space-y-3">
         <select value={forumId} onChange={(event) => setForumId(event.target.value)} required className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
-          <option value="">Forum waehlen</option>
+          <option value="">Forum wählen</option>
           {forums.map((forum) => (
             <option key={forum._id} value={forum._id}>{forum.title}</option>
           ))}
@@ -123,7 +123,7 @@ function EditPostPage() {
         />
 
         <button type="submit" disabled={isSubmitting} className="rounded-xl border border-emerald-500 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
-          {isSubmitting ? 'Speichere...' : 'Aenderungen speichern'}
+          {isSubmitting ? 'Speichere...' : 'Änderungen speichern'}
         </button>
       </form>
 

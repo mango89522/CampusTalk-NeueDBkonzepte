@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { toLocalDateTime } from '../utils/format'
 
-function CommentNode({ comment, depth, isLoggedIn, onReply }) {
+function CommentNode({ comment, depth, isLoggedIn, currentUserId, onReply, onReport, onDelete }) {
   const [replyText, setReplyText] = useState('')
   const [isReplyOpen, setIsReplyOpen] = useState(false)
+  const isOwnComment = Boolean(currentUserId && String(comment.author?._id || comment.author) === String(currentUserId))
 
   const submitReply = async (event) => {
     event.preventDefault()
@@ -14,20 +15,40 @@ function CommentNode({ comment, depth, isLoggedIn, onReply }) {
   }
 
   return (
-    <div className="mt-2" style={{ marginLeft: `${depth * 18}px` }}>
+    <div id={`comment-${comment._id}`} className="mt-2" style={{ marginLeft: `${depth * 18}px` }}>
       <div className="rounded-xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-3">
         <p className="text-neutral-800">{comment.content}</p>
         <p className="text-sm text-neutral-600">
           {comment.author?.username || 'Unbekannt'} · {toLocalDateTime(comment.createdAt)}
         </p>
         {isLoggedIn && (
-          <button
-            type="button"
-            className="mt-1 text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
-            onClick={() => setIsReplyOpen((prev) => !prev)}
-          >
-            Antworten
-          </button>
+          <div className="mt-1 flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-800"
+              onClick={() => setIsReplyOpen((prev) => !prev)}
+            >
+              Antworten
+            </button>
+            {!isOwnComment && (
+              <button
+                type="button"
+                className="text-sm font-semibold text-red-700 transition hover:text-red-800"
+                onClick={() => onReport?.(comment)}
+              >
+                Melden
+              </button>
+            )}
+            {isOwnComment && (
+              <button
+                type="button"
+                className="text-sm font-semibold text-red-700 transition hover:text-red-800"
+                onClick={() => onDelete?.(comment)}
+              >
+                Löschen
+              </button>
+            )}
+          </div>
         )}
 
         {isReplyOpen && (
@@ -52,14 +73,17 @@ function CommentNode({ comment, depth, isLoggedIn, onReply }) {
           comment={reply}
           depth={depth + 1}
           isLoggedIn={isLoggedIn}
+          currentUserId={currentUserId}
           onReply={onReply}
+          onReport={onReport}
+          onDelete={onDelete}
         />
       ))}
     </div>
   )
 }
 
-function CommentTree({ comments, isLoggedIn, onReply }) {
+function CommentTree({ comments, isLoggedIn, currentUserId, onReply, onReport, onDelete }) {
   if (!comments.length) {
     return <p className="text-neutral-600">Noch keine Kommentare.</p>
   }
@@ -72,7 +96,10 @@ function CommentTree({ comments, isLoggedIn, onReply }) {
           comment={comment}
           depth={0}
           isLoggedIn={isLoggedIn}
+          currentUserId={currentUserId}
           onReply={onReply}
+          onReport={onReport}
+          onDelete={onDelete}
         />
       ))}
     </div>

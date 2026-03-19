@@ -2,6 +2,7 @@ const express = require('express');
 const Post = require('../models/Post');
 const Forum = require('../models/Forum');
 const Comment = require('../models/Comment');
+const Report = require('../models/Report');
 const auth = require('../middleware/auth');
 const {
   ensureObjectId,
@@ -66,7 +67,7 @@ async function cleanupReplacedMedia(post, imageChange, videoChange) {
 
 router.get('/', async (req, res) => {
   try {
-    const { tag, search, forumId, authorId } = req.query;
+    const { tag, search, forumId, forumIds, authorId } = req.query;
     const moduleTag = req.query.module;
     const query = {};
 
@@ -84,6 +85,16 @@ router.get('/', async (req, res) => {
     if (forumId) {
       if (!ensureObjectId(res, forumId, 'Forum-ID')) return;
       query.forum = forumId;
+    }
+
+    if (forumIds) {
+      const parsedForumIds = String(forumIds)
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+
+      if (parsedForumIds.some((entry) => !ensureObjectId(res, entry, 'Forum-ID'))) return;
+      query.forum = { $in: parsedForumIds };
     }
 
     if (authorId) {
@@ -343,6 +354,32 @@ router.patch('/:id/downvote', auth, async (req, res) => {
     await post.save();
     res.json(post);
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/:id/report', auth, async (req, res) => {
+  try {
+    if (!ensureObjectId(res, req.params.id, 'Post-ID')) return;
+
+    const post = await Post.findById(req.params.id).select('_id');
+    if (!post) return res.status(404).json({ message: 'Post nicht gefunden' });
+
+    const reason = String(req.body?.reason || '').trim();
+
+    await Report.create({
+      targetType: 'post',
+      targetId: post._id,
+      reporter: req.user.id,
+      reason
+    });
+
+    res.status(201).json({ message: 'Post wurde gemeldet' });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'Du hast diesen Post bereits gemeldet' });
+    }
+
     res.status(500).json({ message: err.message });
   }
 });

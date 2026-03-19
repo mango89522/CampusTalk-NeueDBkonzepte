@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
@@ -103,7 +103,7 @@ function Layout() {
               <img src="/campustalk-logo.svg" alt="CampusTalk Logo" className="h-6 w-6 rounded" />
               <span>CampusTalk</span>
             </p>
-            <p className="mt-2 text-sm text-neutral-600">Foren, Threads und Echtzeit-Chat fuer den Campus-Alltag.</p>
+            <p className="mt-2 text-sm text-neutral-600">Foren, Threads und Echtzeit-Chat für den Campus-Alltag.</p>
           </div>
 
           <div>
@@ -128,7 +128,7 @@ function Layout() {
         </section>
 
         <div className="mt-5 flex flex-wrap justify-between gap-3 border-t border-neutral-300 pt-4 text-sm text-neutral-600">
-          <p>CampusTalk · gebaut fuer Studierende</p>
+          <p>CampusTalk · gebaut für Studierende</p>
           <p>{new Date().getFullYear()} · Hochschule Projekt</p>
         </div>
       </footer>
@@ -140,7 +140,6 @@ function Layout() {
           aria-label="Nach oben"
           onClick={scrollToTop}
         >
-          ↑
         </button>
       )}
     </div>
@@ -148,3 +147,4 @@ function Layout() {
 }
 
 export default Layout
+
