@@ -1,6 +1,7 @@
 const express = require('express');
 const Forum = require('../models/Forum');
 const Message = require('../models/Message');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const {
   ensureObjectId,
@@ -133,6 +134,37 @@ router.delete('/:id', auth, async (req, res) => {
 
     await deleteForumWithRelations(forum._id);
     res.json({ message: 'Forum wurde gelöscht' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/:id/subscribe', auth, async (req, res) => {
+  try {
+    if (!ensureObjectId(res, req.params.id, 'Forum-ID')) return;
+
+    const forum = await Forum.findById(req.params.id).select('_id');
+    if (!forum) return res.status(404).json({ message: 'Forum nicht gefunden' });
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $addToSet: { subscriptions: forum._id }
+    });
+
+    res.json({ message: 'Forum wurde abonniert', forumId: forum._id, subscribed: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.delete('/:id/subscribe', auth, async (req, res) => {
+  try {
+    if (!ensureObjectId(res, req.params.id, 'Forum-ID')) return;
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { subscriptions: req.params.id }
+    });
+
+    res.json({ message: 'Forum wurde deabonniert', forumId: req.params.id, subscribed: false });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

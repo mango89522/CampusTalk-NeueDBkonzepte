@@ -47,6 +47,24 @@ router.get('/me/posts', auth, async (req, res) => {
   }
 });
 
+router.get('/me/subscriptions', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select('subscriptions')
+      .populate('subscriptions', 'title description tags creator createdAt')
+      .populate({
+        path: 'subscriptions',
+        populate: { path: 'creator', select: 'username role' }
+      });
+
+    if (!user) return res.status(404).json({ message: 'User nicht gefunden' });
+
+    res.json(user.subscriptions || []);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.get('/:id/posts', async (req, res) => {
   try {
     if (!ensureObjectId(res, req.params.id, 'User-ID')) return;

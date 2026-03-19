@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import { API_BASE_URL } from '../api/client'
 import { forumApi } from '../api/services'
@@ -97,7 +97,7 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
   }
 
   if (!isLoggedIn) {
-    return <p className="rounded-xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-4 text-neutral-600">Fuer den Live-Chat bitte einloggen.</p>
+    return <p className="rounded-xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-4 text-neutral-600">Für den Live-Chat bitte einloggen.</p>
   }
 
   return (
@@ -130,3 +130,4 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
 }
 
 export default ForumChatPanel
+

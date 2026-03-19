@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { forumApi, postApi } from '../api/services'
+import { forumApi, postApi, userApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
 import { useAuth } from '../hooks/useAuth'
 import PostCard from '../components/PostCard'
@@ -13,6 +13,7 @@ function ForumDetailPage() {
 
   const [forum, setForum] = useState(null)
   const [posts, setPosts] = useState([])
+  const [subscriptions, setSubscriptions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -34,12 +35,21 @@ function ForumDetailPage() {
 
       setForum(forumRes.data)
       setPosts(postsRes.data)
+
+      if (isLoggedIn) {
+        const { data: subscriptionsData } = await userApi.mySubscriptions()
+        setSubscriptions(subscriptionsData)
+      }
     } catch (apiError) {
       setError(getApiErrorMessage(apiError, 'Forum konnte nicht geladen werden'))
     } finally {
       setIsLoading(false)
     }
-  }, [id])
+  }, [id, isLoggedIn])
+
+  const isSubscribed = useMemo(() => {
+    return subscriptions.some((entry) => String(entry._id || entry.id) === String(id))
+  }, [subscriptions, id])
 
   useEffect(() => {
     loadData()
@@ -59,13 +69,13 @@ function ForumDetailPage() {
   }
 
   const deleteForum = async () => {
-    if (!window.confirm('Forum wirklich loeschen?')) return
+    if (!window.confirm('Forum wirklich löschen?')) return
 
     try {
       await forumApi.remove(id)
       navigate('/')
     } catch (apiError) {
-      setError(getApiErrorMessage(apiError, 'Forum konnte nicht geloescht werden'))
+      setError(getApiErrorMessage(apiError, 'Forum konnte nicht gelöscht werden'))
     }
   }
 
@@ -76,13 +86,38 @@ function ForumDetailPage() {
   }, [isAdmin, currentUserId])
 
   const deletePost = async (postId) => {
-    if (!window.confirm('Post wirklich loeschen?')) return
+    if (!window.confirm('Post wirklich löschen?')) return
 
     try {
       await postApi.remove(postId)
       setPosts((prev) => prev.filter((post) => String(post._id) !== String(postId)))
     } catch (apiError) {
-      setError(getApiErrorMessage(apiError, 'Post konnte nicht geloescht werden'))
+      setError(getApiErrorMessage(apiError, 'Post konnte nicht gelöscht werden'))
+    }
+  }
+
+  const toggleSubscription = async () => {
+    try {
+      if (isSubscribed) {
+        await forumApi.unsubscribe(id)
+      } else {
+        await forumApi.subscribe(id)
+      }
+
+      const { data } = await userApi.mySubscriptions()
+      setSubscriptions(data)
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Abo konnte nicht aktualisiert werden'))
+    }
+  }
+
+  const reportPost = async (post) => {
+    const reason = window.prompt('Warum möchtest du diesen Post melden? (optional)') || ''
+
+    try {
+      await postApi.report(post._id, reason)
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Post konnte nicht gemeldet werden'))
     }
   }
 
@@ -109,13 +144,22 @@ function ForumDetailPage() {
                 Post in diesem Forum
               </Link>
             )}
+            {isLoggedIn && (
+              <button
+                type="button"
+                onClick={toggleSubscription}
+                className="rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 transition hover:-translate-y-0.5 hover:border-emerald-400"
+              >
+                {isSubscribed ? 'Abo entfernen' : 'Forum abonnieren'}
+              </button>
+            )}
             {canManage && (
               <button
                 type="button"
                 onClick={deleteForum}
                 className="rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5"
               >
-                Forum loeschen
+                Forum löschen
               </button>
             )}
           </div>
@@ -136,6 +180,7 @@ function ForumDetailPage() {
               canManage={canManagePost(post)}
               editPath={`/posts/${post._id}/edit`}
               onDelete={deletePost}
+              onReport={isLoggedIn && !canManagePost(post) ? reportPost : undefined}
             />
           ))}
           {!posts.length && <p className="text-neutral-600">Noch keine Posts vorhanden.</p>}

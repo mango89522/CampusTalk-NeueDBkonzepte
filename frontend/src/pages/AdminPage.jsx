@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { adminApi, forumApi, postApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
@@ -7,6 +7,7 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState('users')
 
   const [users, setUsers] = useState([])
+  const [reports, setReports] = useState([])
   const [forums, setForums] = useState([])
   const [forumPosts, setForumPosts] = useState({})
   const [forumPostsLoading, setForumPostsLoading] = useState({})
@@ -44,9 +45,20 @@ function AdminPage() {
     }
   }
 
+  const loadReports = async () => {
+    try {
+      setError('')
+      const { data } = await adminApi.reports()
+      setReports(data)
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Meldungen konnten nicht geladen werden'))
+    }
+  }
+
   useEffect(() => {
     loadUsers()
     loadForums()
+    loadReports()
   }, [])
 
   const changeRole = async (userId, role) => {
@@ -54,7 +66,7 @@ function AdminPage() {
       await adminApi.changeRole(userId, role)
       await loadUsers()
     } catch (apiError) {
-      setError(getApiErrorMessage(apiError, 'Rolle konnte nicht geaendert werden'))
+      setError(getApiErrorMessage(apiError, 'Rolle konnte nicht geändert werden'))
     }
   }
 
@@ -87,7 +99,7 @@ function AdminPage() {
   }
 
   const deleteForum = async (forumId) => {
-    if (!window.confirm('Forum wirklich loeschen? Alle Posts in diesem Forum werden entfernt.')) return
+    if (!window.confirm('Forum wirklich löschen? Alle Posts in diesem Forum werden entfernt.')) return
 
     try {
       await forumApi.remove(forumId)
@@ -101,7 +113,7 @@ function AdminPage() {
         cancelForumEdit()
       }
     } catch (apiError) {
-      setError(getApiErrorMessage(apiError, 'Forum konnte nicht geloescht werden'))
+      setError(getApiErrorMessage(apiError, 'Forum konnte nicht gelöscht werden'))
     }
   }
 
@@ -131,7 +143,7 @@ function AdminPage() {
   }
 
   const deletePost = async (forumId, postId) => {
-    if (!window.confirm('Post wirklich loeschen?')) return
+    if (!window.confirm('Post wirklich löschen?')) return
 
     try {
       await postApi.remove(postId)
@@ -140,7 +152,7 @@ function AdminPage() {
         [forumId]: (prev[forumId] || []).filter((post) => String(post._id) !== String(postId)),
       }))
     } catch (apiError) {
-      setError(getApiErrorMessage(apiError, 'Post konnte nicht geloescht werden'))
+      setError(getApiErrorMessage(apiError, 'Post konnte nicht gelöscht werden'))
     }
   }
 
@@ -174,12 +186,72 @@ function AdminPage() {
         >
           Foren verwalten
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('reports')}
+          className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+            activeTab === 'reports'
+              ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+              : 'border-neutral-300 bg-white text-neutral-700 hover:border-emerald-400'
+          }`}
+        >
+          Gemeldete Inhalte
+        </button>
       </div>
 
       {error && <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>}
 
       {activeTab === 'users' && isLoading && <p className="text-neutral-600">Lade Nutzer...</p>}
       {activeTab === 'forums' && isLoadingForums && <p className="text-neutral-600">Lade Foren...</p>}
+
+      {activeTab === 'reports' && (
+        <div className="space-y-3 rounded-2xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-5 shadow-sm">
+          {!reports.length && <p className="text-neutral-600">Keine Meldungen vorhanden.</p>}
+          {reports.map((entry) => (
+            <article key={entry.id} className="space-y-1 rounded-xl border border-neutral-300 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-neutral-600">{entry.targetType === 'post' ? 'Post-Meldung' : 'Kommentar-Meldung'}</p>
+              <p className="text-sm text-neutral-700">Gemeldet von {entry.reporter?.username || 'Unbekannt'} am {new Date(entry.createdAt).toLocaleString('de-DE')}</p>
+              {entry.reason && <p className="text-sm text-neutral-800"><strong>Grund:</strong> {entry.reason}</p>}
+
+              {entry.targetType === 'post' && entry.target && (
+                <div className="rounded-lg border border-neutral-200 bg-[rgba(255,253,248,0.85)] p-3 text-sm text-neutral-800">
+                  <p><strong>Titel:</strong> {entry.target.title}</p>
+                  <p><strong>Forum:</strong> {entry.target.forum?.title || 'Unbekannt'}</p>
+                  <p><strong>Autor:</strong> {entry.target.author?.username || 'Unbekannt'}</p>
+                  <div className="mt-2">
+                    <Link
+                      to={`/posts/${entry.target._id}`}
+                      className="inline-flex rounded-xl border border-emerald-500 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 transition hover:-translate-y-0.5"
+                    >
+                      Zum Post
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {entry.targetType === 'comment' && entry.target && (
+                <div className="rounded-lg border border-neutral-200 bg-[rgba(255,253,248,0.85)] p-3 text-sm text-neutral-800">
+                  <p><strong>Post:</strong> {entry.target.post?.title || 'Unbekannt'}</p>
+                  <p><strong>Autor:</strong> {entry.target.author?.username || 'Unbekannt'}</p>
+                  <p className="mt-1"><strong>Kommentar:</strong> {entry.target.content}</p>
+                  {entry.target.post?._id && (
+                    <div className="mt-2">
+                      <Link
+                        to={`/posts/${entry.target.post._id}?commentId=${entry.target._id}`}
+                        className="inline-flex rounded-xl border border-emerald-500 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 transition hover:-translate-y-0.5"
+                      >
+                        Zum Kommentar
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!entry.target && <p className="text-sm text-neutral-600">Zielinhalt wurde inzwischen gelöscht.</p>}
+            </article>
+          ))}
+        </div>
+      )}
 
       {activeTab === 'users' && !isLoading && (
         <div className="space-y-3 rounded-2xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-5 shadow-sm">
@@ -228,7 +300,7 @@ function AdminPage() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <button type="button" onClick={() => beginForumEdit(forum)} className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-700 transition hover:-translate-y-0.5">Bearbeiten</button>
-                        <button type="button" onClick={() => deleteForum(forum._id)} className="rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5">Forum loeschen</button>
+                        <button type="button" onClick={() => deleteForum(forum._id)} className="rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5">Forum löschen</button>
                         <button type="button" onClick={() => toggleForumPosts(forum._id)} className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 transition hover:-translate-y-0.5 hover:border-emerald-400">
                           {postsOpen ? 'Posts ausblenden' : 'Posts verwalten'}
                         </button>
@@ -276,7 +348,7 @@ function AdminPage() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Link to={`/posts/${post._id}/edit`} className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-sm font-semibold text-blue-700 transition hover:-translate-y-0.5">Bearbeiten</Link>
-                          <button type="button" onClick={() => deletePost(forum._id, post._id)} className="rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5">Loeschen</button>
+                          <button type="button" onClick={() => deletePost(forum._id, post._id)} className="rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5">Löschen</button>
                         </div>
                       </div>
                     ))}
@@ -292,3 +364,4 @@ function AdminPage() {
 }
 
 export default AdminPage
+

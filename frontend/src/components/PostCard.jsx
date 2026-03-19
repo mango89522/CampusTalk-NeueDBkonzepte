@@ -1,8 +1,8 @@
-import { memo } from 'react'
+﻿import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { postScore, toLocalDateTime, voteCount } from '../utils/format'
 
-function PostCard({ post, onUpvote, onDownvote, canVote = false, currentUserId = '', canManage = false, editPath = '', onDelete }) {
+function PostCard({ post, onUpvote, onDownvote, onReport, canVote = false, currentUserId = '', canManage = false, editPath = '', onDelete }) {
   const authorId = post?.author?._id || post?.author
   const isOwnPost = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId))
   const hasUpvoted = (post?.upvotes || []).some((id) => String(id) === String(currentUserId))
@@ -76,7 +76,7 @@ function PostCard({ post, onUpvote, onDownvote, canVote = false, currentUserId =
           >
             Downvote
           </button>
-          {isOwnPost && <span className="self-center text-xs font-medium text-neutral-600">Eigene Posts koennen nicht bewertet werden.</span>}
+          {isOwnPost && <span className="self-center text-xs font-medium text-neutral-600">Eigene Posts können nicht bewertet werden.</span>}
         </div>
       )}
 
@@ -95,7 +95,19 @@ function PostCard({ post, onUpvote, onDownvote, canVote = false, currentUserId =
             onClick={() => onDelete?.(post._id)}
             className="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5"
           >
-            Loeschen
+            Löschen
+          </button>
+        </div>
+      )}
+
+      {!canManage && onReport && (
+        <div className="mt-3 border-t border-neutral-200 pt-3">
+          <button
+            type="button"
+            onClick={() => onReport(post)}
+            className="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5"
+          >
+            Inhalt melden
           </button>
         </div>
       )}

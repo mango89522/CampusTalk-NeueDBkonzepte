@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { commentApi, postApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
 import PostCard from '../components/PostCard'
@@ -9,6 +9,7 @@ import { upsertChatPeer } from '../utils/chatPeers'
 
 function PostDetailPage() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { isLoggedIn, isAdmin, user } = useAuth()
   const currentUserId = user?.id || user?._id
@@ -42,6 +43,23 @@ function PostDetailPage() {
     loadData()
   }, [loadData])
 
+  useEffect(() => {
+    const commentId = searchParams.get('commentId')
+    if (!commentId || !comments.length) return
+
+    const element = document.getElementById(`comment-${commentId}`)
+    if (!element) return
+
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    element.classList.add('ring-2', 'ring-emerald-300', 'rounded-xl')
+
+    const timeoutId = window.setTimeout(() => {
+      element.classList.remove('ring-2', 'ring-emerald-300', 'rounded-xl')
+    }, 1800)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [comments, searchParams])
+
   const canManagePost = useMemo(() => {
     const currentUserId = user?.id || user?._id
     const authorId = post?.author?._id || post?.author
@@ -74,19 +92,50 @@ function PostDetailPage() {
   }
 
   const deletePost = async () => {
-    if (!window.confirm('Post wirklich loeschen?')) return
+    if (!window.confirm('Post wirklich löschen?')) return
 
     try {
       await postApi.remove(id)
       navigate('/')
     } catch (apiError) {
-      setError(getApiErrorMessage(apiError, 'Post konnte nicht geloescht werden'))
+      setError(getApiErrorMessage(apiError, 'Post konnte nicht gelöscht werden'))
     }
   }
 
   const replyToComment = async (text, parentCommentId) => {
     await commentApi.create({ content: text, postId: id, parentCommentId })
     await loadData()
+  }
+
+  const deleteComment = async (comment) => {
+    if (!window.confirm('Kommentar wirklich löschen?')) return
+
+    try {
+      await commentApi.remove(comment._id)
+      await loadData()
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Kommentar konnte nicht gelöscht werden'))
+    }
+  }
+
+  const reportPost = async (postToReport) => {
+    const reason = window.prompt('Warum möchtest du diesen Post melden? (optional)') || ''
+
+    try {
+      await postApi.report(postToReport._id, reason)
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Post konnte nicht gemeldet werden'))
+    }
+  }
+
+  const reportComment = async (comment) => {
+    const reason = window.prompt('Warum möchtest du diesen Kommentar melden? (optional)') || ''
+
+    try {
+      await commentApi.report(comment._id, reason)
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Kommentar konnte nicht gemeldet werden'))
+    }
   }
 
   if (isLoading) return <p>Lade Post...</p>
@@ -105,6 +154,7 @@ function PostDetailPage() {
             canManage={canManagePost}
             editPath={`/posts/${post._id}/edit`}
             onDelete={deletePost}
+            onReport={isLoggedIn && !canManagePost ? reportPost : undefined}
           />
 
           {post.author?._id && (
@@ -135,7 +185,14 @@ function PostDetailPage() {
           </form>
         )}
 
-        <CommentTree comments={comments} isLoggedIn={isLoggedIn} onReply={replyToComment} />
+        <CommentTree
+          comments={comments}
+          isLoggedIn={isLoggedIn}
+          currentUserId={currentUserId}
+          onReply={replyToComment}
+          onReport={reportComment}
+          onDelete={deleteComment}
+        />
       </section>
     </section>
   )

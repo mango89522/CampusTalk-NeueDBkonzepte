@@ -12,6 +12,8 @@ export const forumApi = {
   create: (payload) => api.post('/forums', payload),
   update: (id, payload) => api.patch(`/forums/${id}`, payload),
   remove: (id) => api.delete(`/forums/${id}`),
+  subscribe: (id) => api.post(`/forums/${id}/subscribe`),
+  unsubscribe: (id) => api.delete(`/forums/${id}/subscribe`),
   messages: (forumId, limit = 100) => api.get(`/forums/${forumId}/messages`, { params: { limit } }),
 }
 
@@ -23,17 +25,20 @@ export const postApi = {
   update: (id, payload) => api.patch(`/posts/${id}`, payload),
   upvote: (id) => api.patch(`/posts/${id}/upvote`),
   downvote: (id) => api.patch(`/posts/${id}/downvote`),
+  report: (id, reason = '') => api.post(`/posts/${id}/report`, { reason }),
   remove: (id) => api.delete(`/posts/${id}`),
 }
 
 export const commentApi = {
   create: (payload) => api.post('/comments', payload),
   update: (id, payload) => api.patch(`/comments/${id}`, payload),
+  report: (id, reason = '') => api.post(`/comments/${id}/report`, { reason }),
   remove: (id) => api.delete(`/comments/${id}`),
 }
 
 export const userApi = {
   myPosts: () => api.get('/users/me/posts'),
+  mySubscriptions: () => api.get('/users/me/subscriptions'),
   postsByUserId: (id) => api.get(`/users/${id}/posts`),
   search: (query, limit = 15) => api.get('/users/search', { params: { q: query, limit } }),
 }
@@ -46,4 +51,5 @@ export const privateMessageApi = {
 export const adminApi = {
   users: () => api.get('/admin/users'),
   changeRole: (userId, role) => api.patch(`/admin/users/${userId}/role`, { role }),
+  reports: () => api.get('/admin/reports'),
 }

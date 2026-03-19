@@ -1,6 +1,7 @@
 const express = require('express');
 const Comment = require('../models/Comment');
 const Post = require('../models/Post');
+const Report = require('../models/Report');
 const auth = require('../middleware/auth');
 const { ensureObjectId, canManageResource, deleteCommentThread } = require('../utils/helpers');
 
@@ -75,6 +76,32 @@ router.patch('/:id', auth, async (req, res) => {
     res.json(populatedComment);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+});
+
+router.post('/:id/report', auth, async (req, res) => {
+  try {
+    if (!ensureObjectId(res, req.params.id, 'Kommentar-ID')) return;
+
+    const comment = await Comment.findById(req.params.id).select('_id');
+    if (!comment) return res.status(404).json({ message: 'Kommentar nicht gefunden' });
+
+    const reason = String(req.body?.reason || '').trim();
+
+    await Report.create({
+      targetType: 'comment',
+      targetId: comment._id,
+      reporter: req.user.id,
+      reason
+    });
+
+    res.status(201).json({ message: 'Kommentar wurde gemeldet' });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ message: 'Du hast diesen Kommentar bereits gemeldet' });
+    }
+
+    res.status(500).json({ message: err.message });
   }
 });
 
