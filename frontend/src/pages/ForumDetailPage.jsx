@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { forumApi, postApi, userApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
@@ -16,7 +16,6 @@ function ForumDetailPage() {
   const [subscriptions, setSubscriptions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const chatRefreshTimeoutRef = useRef(null)
 
   const currentUserId = user?.id || user?._id
   const canManage = useMemo(() => {
@@ -24,22 +23,18 @@ function ForumDetailPage() {
     return Boolean(isAdmin || (currentUserId && creatorId && String(currentUserId) === String(creatorId)))
   }, [forum, isAdmin, currentUserId])
 
-  const refreshForumContent = useCallback(async () => {
-    const [forumRes, postsRes] = await Promise.all([
-      forumApi.getById(id),
-      postApi.list({ forumId: id }),
-    ])
-
-    setForum(forumRes.data)
-    setPosts(postsRes.data)
-  }, [id])
-
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true)
       setError('')
 
-      await refreshForumContent()
+      const [forumRes, postsRes] = await Promise.all([
+        forumApi.getById(id),
+        postApi.list({ forumId: id }),
+      ])
+
+      setForum(forumRes.data)
+      setPosts(postsRes.data)
 
       if (isLoggedIn) {
         const { data: subscriptionsData } = await userApi.mySubscriptions()
@@ -50,7 +45,7 @@ function ForumDetailPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [isLoggedIn, refreshForumContent])
+  }, [id, isLoggedIn])
 
   const isSubscribed = useMemo(() => {
     return subscriptions.some((entry) => String(entry._id || entry.id) === String(id))
@@ -59,28 +54,6 @@ function ForumDetailPage() {
   useEffect(() => {
     loadData()
   }, [loadData])
-
-  useEffect(() => {
-    return () => {
-      if (chatRefreshTimeoutRef.current) {
-        window.clearTimeout(chatRefreshTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  const handleForumChatActivity = useCallback(() => {
-    if (chatRefreshTimeoutRef.current) {
-      window.clearTimeout(chatRefreshTimeoutRef.current)
-    }
-
-    chatRefreshTimeoutRef.current = window.setTimeout(async () => {
-      try {
-        await refreshForumContent()
-      } catch {
-        // Chat messages should still work even if the short forum refresh fails.
-      }
-    }, 350)
-  }, [refreshForumContent])
 
   const vote = async (postId, type) => {
     try {
@@ -213,7 +186,7 @@ function ForumDetailPage() {
           {!posts.length && <p className="text-neutral-600">Noch keine Posts vorhanden.</p>}
         </section>
 
-        <ForumChatPanel forumId={id} token={token} isLoggedIn={isLoggedIn} onForumMessage={handleForumChatActivity} />
+        <ForumChatPanel forumId={id} token={token} isLoggedIn={isLoggedIn} />
       </div>
     </section>
   )

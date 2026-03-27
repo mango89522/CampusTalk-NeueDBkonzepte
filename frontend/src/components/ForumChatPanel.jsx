@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import { API_BASE_URL } from '../api/client'
 import { forumApi } from '../api/services'
@@ -7,14 +7,12 @@ import { toLocalDateTime } from '../utils/format'
 
 const SOCKET_URL = API_BASE_URL.replace('/api', '')
 
-function ForumChatPanel({ forumId, token, isLoggedIn, onForumMessage }) {
+function ForumChatPanel({ forumId, token, isLoggedIn }) {
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [error, setError] = useState('')
-  const [isSocketConnected, setIsSocketConnected] = useState(false)
   const socketRef = useRef(null)
   const scrollRef = useRef(null)
-  const latestMessageKeyRef = useRef('')
 
   const getMessageKey = useMemo(() => {
     return (message) => {
@@ -36,123 +34,54 @@ function ForumChatPanel({ forumId, token, isLoggedIn, onForumMessage }) {
   }, [getMessageKey])
 
   useEffect(() => {
-    setMessages([])
-    setError('')
-    latestMessageKeyRef.current = ''
-  }, [forumId])
-
-  const loadHistory = useCallback(async (notifyOnNew = false) => {
-    if (!isLoggedIn || !forumId) return
-
-    const { data } = await forumApi.messages(forumId)
-    mergeMessages(data)
-
-    const newestEntry = data[data.length - 1]
-    const newestKey = newestEntry ? getMessageKey(newestEntry) : ''
-
-    if (!newestKey) return
-
-    const previousNewestKey = latestMessageKeyRef.current
-    latestMessageKeyRef.current = newestKey
-
-    if (notifyOnNew && previousNewestKey && previousNewestKey !== newestKey) {
-      onForumMessage?.(newestEntry)
-    }
-  }, [forumId, isLoggedIn, mergeMessages, getMessageKey, onForumMessage])
-
-  useEffect(() => {
     if (!isLoggedIn || !forumId) return
 
     let isMounted = true
-    const loadInitialHistory = async () => {
+    const loadHistory = async () => {
       try {
-        await loadHistory(false)
+        const { data } = await forumApi.messages(forumId)
+        if (isMounted) mergeMessages(data)
       } catch (apiError) {
         if (isMounted) setError(getApiErrorMessage(apiError, 'Chat-Verlauf konnte nicht geladen werden'))
       }
     }
 
-    loadInitialHistory()
+    loadHistory()
 
     return () => {
       isMounted = false
     }
-  }, [forumId, isLoggedIn, loadHistory])
-
-  useEffect(() => {
-    if (!isLoggedIn || !forumId || isSocketConnected) return undefined
-
-    const intervalId = window.setInterval(async () => {
-      try {
-        await loadHistory(true)
-      } catch {
-        // Keep retrying silently in fallback mode.
-      }
-    }, 2200)
-
-    return () => {
-      window.clearInterval(intervalId)
-    }
-  }, [forumId, isLoggedIn, isSocketConnected, loadHistory])
+  }, [forumId, isLoggedIn, mergeMessages])
 
   useEffect(() => {
     if (!isLoggedIn || !token || !forumId) return undefined
 
     const socket = io(SOCKET_URL, {
       auth: { token },
+      transports: ['websocket'],
     })
     socketRef.current = socket
 
     socket.emit('join_forum', forumId)
 
-    const onConnect = () => {
-      setIsSocketConnected(true)
-      setError('')
-      socket.emit('join_forum', forumId)
-    }
-
-    const onDisconnect = () => {
-      setIsSocketConnected(false)
-    }
-
     const onReceive = (message) => {
-      const messageForumId = String(message?.forumId || message?.forum?._id || message?.forum || '')
-
-      if (messageForumId && String(messageForumId) !== String(forumId)) {
-        return
-      }
-
       mergeMessages([message])
-      latestMessageKeyRef.current = getMessageKey(message)
-      onForumMessage?.(message)
     }
 
     const onSocketError = (payload) => {
       setError(payload?.message || 'Socket-Fehler')
     }
 
-    const onConnectError = () => {
-      setIsSocketConnected(false)
-      setError('Live-Verbindung getrennt, synchronisiere automatisch...')
-    }
-
-    socket.on('connect', onConnect)
-    socket.on('disconnect', onDisconnect)
     socket.on('receive_message', onReceive)
     socket.on('socket_error', onSocketError)
-    socket.on('connect_error', onConnectError)
 
     return () => {
-      socket.off('connect', onConnect)
-      socket.off('disconnect', onDisconnect)
       socket.off('receive_message', onReceive)
       socket.off('socket_error', onSocketError)
-      socket.off('connect_error', onConnectError)
       socket.disconnect()
       socketRef.current = null
-      setIsSocketConnected(false)
     }
-  }, [forumId, isLoggedIn, token, mergeMessages, onForumMessage, getMessageKey])
+  }, [forumId, isLoggedIn, token, mergeMessages])
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
