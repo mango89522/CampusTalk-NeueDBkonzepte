@@ -1,6 +1,6 @@
 # CampusTalk Frontend
 
-React + Vite Frontend fuer CampusTalk.
+React + Vite Frontend für CampusTalk.
 
 ## Voraussetzungen
 
@@ -9,13 +9,13 @@ React + Vite Frontend fuer CampusTalk.
 
 ## Installation
 
-1. Im Ordner frontend Abhaengigkeiten installieren:
+1. Im Ordner frontend Abhängigkeiten installieren:
 
 ```bash
 npm install
 ```
 
-2. Optional: API-URL konfigurieren ueber Umgebungsvariable:
+2. Optional: API-URL konfigurieren über Umgebungsvariable:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5001/api
@@ -46,12 +46,12 @@ npm run lint
 ## Umgesetzte Funktionen
 
 - Gast:
-	- Oeffentliche Foren und Posts lesen
-	- Suche und Filter ueber Suchtext und Tags
+	- Öffentliche Foren und Posts lesen
+	- Suche und Filter über Suchtext und Tags
 	- Registrierung und Login
 - Studierender:
 	- Forum erstellen
-	- Post erstellen (Text, Bild-URL, Video-URL)
+	- Post erstellen (Text, Bild/Video per URL oder Datei-Upload)
 	- Kommentare und verschachtelte Antworten
 	- Upvote/Downvote
 	- Forum-Livechat mit Socket.IO
@@ -60,8 +60,9 @@ npm run lint
 - Administrator:
 	- Nutzerverwaltung
 	- Rollenwechsel Studierender <-> Administrator
+	- Studierende löschen (eigener Account nicht löschbar)
 
 ## Hinweise
 
-- Fuer private Nachrichten gibt es im aktuellen Backend keinen oeffentlichen Endpoint fuer eine komplette User-Liste. Deshalb nutzt das Frontend bekannte Kontakte (z. B. aus Posts/Interaktionen), um Konversationen zu starten.
-- Die NoSQL-Staerken werden im Frontend sichtbar durch flexible Tags, gemischte Inhaltsformate (Text/Bild/Video) und hohe Schreibfrequenz in Chat/Kommentaren.
+- Für private Nachrichten gibt es im aktuellen Backend keinen öffentlichen Endpoint für eine komplette User-Liste. Deshalb nutzt das Frontend bekannte Kontakte (z. B. aus Posts/Interaktionen), um Konversationen zu starten.
+- Die NoSQL-Stärken werden im Frontend sichtbar durch flexible Tags, gemischte Inhaltsformate (Text/Bild/Video) und hohe Schreibfrequenz in Chat/Kommentaren.

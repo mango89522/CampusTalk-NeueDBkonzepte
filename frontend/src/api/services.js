@@ -51,5 +51,6 @@ export const privateMessageApi = {
 export const adminApi = {
   users: () => api.get('/admin/users'),
   changeRole: (userId, role) => api.patch(`/admin/users/${userId}/role`, { role }),
+  removeStudent: (userId) => api.delete(`/admin/users/${userId}`),
   reports: () => api.get('/admin/reports'),
 }

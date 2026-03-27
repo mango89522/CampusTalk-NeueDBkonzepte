@@ -1,9 +1,12 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { adminApi, forumApi, postApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
+import { useAuth } from '../hooks/useAuth'
 
 function AdminPage() {
+  const { user: currentUser } = useAuth()
+  const currentUserId = currentUser?.id || currentUser?._id || ''
   const [activeTab, setActiveTab] = useState('users')
 
   const [users, setUsers] = useState([])
@@ -62,11 +65,38 @@ function AdminPage() {
   }, [])
 
   const changeRole = async (userId, role) => {
+    if (String(userId) === String(currentUserId)) {
+      return
+    }
+
     try {
       await adminApi.changeRole(userId, role)
       await loadUsers()
     } catch (apiError) {
       setError(getApiErrorMessage(apiError, 'Rolle konnte nicht geändert werden'))
+    }
+  }
+
+  const deleteStudent = async (targetUser) => {
+    const userId = targetUser?._id || targetUser?.id
+
+    if (!userId) return
+
+    if (String(userId) === String(currentUserId) || targetUser.role !== 'Studierender') {
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Studierenden ${targetUser.username} wirklich löschen? Alle eigenen Posts, Kommentare und Nachrichten werden entfernt.`
+    )
+    if (!confirmed) return
+
+    try {
+      setError('')
+      await adminApi.removeStudent(userId)
+      setUsers((prev) => prev.filter((entry) => String(entry._id || entry.id) !== String(userId)))
+    } catch (apiError) {
+      setError(getApiErrorMessage(apiError, 'Studierender konnte nicht gelöscht werden'))
     }
   }
 
@@ -155,6 +185,22 @@ function AdminPage() {
       setError(getApiErrorMessage(apiError, 'Post konnte nicht gelöscht werden'))
     }
   }
+
+  const sortedUsers = useMemo(() => {
+    const ownEntries = []
+    const otherEntries = []
+
+    users.forEach((entry) => {
+      const entryId = entry._id || entry.id
+      if (String(entryId) === String(currentUserId)) {
+        ownEntries.push(entry)
+      } else {
+        otherEntries.push(entry)
+      }
+    })
+
+    return [...ownEntries, ...otherEntries]
+  }, [users, currentUserId])
 
   return (
     <section className="space-y-7">
@@ -255,24 +301,49 @@ function AdminPage() {
 
       {activeTab === 'users' && !isLoading && (
         <div className="space-y-3 rounded-2xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-5 shadow-sm">
-          {users.map((user) => (
-            <div key={user._id || user.id} className="flex flex-col items-start justify-between gap-2 rounded-xl border border-neutral-300 bg-white p-3 md:flex-row md:items-center">
-              <div>
-                <strong className="text-neutral-900">{user.username}</strong>
-                <p className="text-sm text-neutral-600">{user.email}</p>
+          {sortedUsers.map((user) => {
+            const userId = user._id || user.id
+            const isOwnUser = String(userId) === String(currentUserId)
+            const canDeleteStudent = !isOwnUser && user.role === 'Studierender'
+
+            return (
+              <div
+                key={userId}
+                className={`flex flex-col items-start justify-between gap-2 rounded-xl border p-3 md:flex-row md:items-center ${
+                  isOwnUser
+                    ? 'border-emerald-300 bg-emerald-50/40 ring-1 ring-emerald-200'
+                    : 'border-neutral-300 bg-white'
+                }`}
+              >
+                <div>
+                  <strong className="text-neutral-900">{user.username}{isOwnUser ? ' (Du)' : ''}</strong>
+                  <p className="text-sm text-neutral-600">{user.email}</p>
+                  {isOwnUser && (
+                    <p className="text-xs font-semibold text-emerald-700">Eigener Account: Rollenänderung deaktiviert</p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={user.role}
+                    disabled={isOwnUser}
+                    onChange={(event) => changeRole(userId, event.target.value)}
+                    className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <option value="Studierender">Studierender</option>
+                    <option value="Administrator">Administrator</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => deleteStudent(user)}
+                    disabled={!canDeleteStudent}
+                    className="rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:border-neutral-300 disabled:text-neutral-500 disabled:hover:translate-y-0"
+                  >
+                    Studierenden löschen
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <select
-                  value={user.role}
-                  onChange={(event) => changeRole(user._id || user.id, event.target.value)}
-                  className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                >
-                  <option value="Studierender">Studierender</option>
-                  <option value="Administrator">Administrator</option>
-                </select>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

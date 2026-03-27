@@ -7,7 +7,7 @@ Im integrierten Terminal /backend `npm i` ausführen
 Env Example kopieren und neue .env machen, URL aus Web kopieren und User + Passwort durch Benutzerdaten ersetzen
 
 ## 3. Schritt 
-integriertes Terminal für /backend und `node server.js` ausführen
+integriertes Terminal für /backend und `npm run dev` ausführen
 
 ## 4. Struktur
 ```
@@ -46,7 +46,15 @@ backend/
     - `PATCH /api/posts/:id` mit `multipart/form-data`
     - Feldnamen für Dateien: `image` und `video`
 
-## 6. Chat starten
+## 6. Admin-Endpunkte
+- Nutzerliste: `GET /api/admin/users`
+- Nutzerrolle ändern: `PATCH /api/admin/users/:id/role`
+    - Eigene Rolle kann nicht geändert werden.
+- Studierenden löschen: `DELETE /api/admin/users/:id`
+    - Nur Rolle `Studierender` ist löschbar.
+    - Eigener Account kann nicht gelöscht werden.
+
+## 7. Chat starten
 1. In Postman "+" und "Socket.IO" auswählen
 2. In die URL "http://localhost:5001?token=" + jwt-Token und Connect klicken
 3. Forum beitreten: 

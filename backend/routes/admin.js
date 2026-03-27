@@ -3,9 +3,12 @@ const User = require('../models/User');
 const Report = require('../models/Report');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
+const Forum = require('../models/Forum');
+const Message = require('../models/Message');
+const PrivateMessage = require('../models/PrivateMessage');
 const auth = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
-const { ensureObjectId, sanitizeUser } = require('../utils/helpers');
+const { ensureObjectId, sanitizeUser, deletePostWithRelations } = require('../utils/helpers');
 
 const router = express.Router();
 
@@ -22,6 +25,10 @@ router.patch('/users/:id/role', auth, requireAdmin, async (req, res) => {
   try {
     if (!ensureObjectId(res, req.params.id, 'User-ID')) return;
 
+    if (String(req.params.id) === String(req.user.id)) {
+      return res.status(400).json({ message: 'Eigene Rolle kann nicht geändert werden' });
+    }
+
     const { role } = req.body;
     const allowedRoles = ['Studierender', 'Administrator'];
 
@@ -37,6 +44,70 @@ router.patch('/users/:id/role', auth, requireAdmin, async (req, res) => {
     await user.save();
 
     res.json(sanitizeUser(user));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.delete('/users/:id', auth, requireAdmin, async (req, res) => {
+  try {
+    if (!ensureObjectId(res, req.params.id, 'User-ID')) return;
+
+    if (String(req.params.id) === String(req.user.id)) {
+      return res.status(400).json({ message: 'Eigener Account kann nicht gelöscht werden' });
+    }
+
+    const userToDelete = await User.findById(req.params.id).select('_id role username');
+
+    if (!userToDelete) {
+      return res.status(404).json({ message: 'User nicht gefunden' });
+    }
+
+    if (userToDelete.role !== 'Studierender') {
+      return res.status(403).json({ message: 'Nur Studierende können gelöscht werden' });
+    }
+
+    const postsByUser = await Post.find({ author: userToDelete._id }).select('_id');
+    const postIds = postsByUser.map((entry) => entry._id);
+
+    await Promise.all(postsByUser.map((entry) => deletePostWithRelations(entry._id)));
+
+    const commentsByUser = await Comment.find({ author: userToDelete._id }).select('_id');
+    const commentIds = commentsByUser.map((entry) => entry._id);
+    await Comment.deleteMany({ author: userToDelete._id });
+
+    await Post.updateMany(
+      {},
+      {
+        $pull: {
+          upvotes: userToDelete._id,
+          downvotes: userToDelete._id
+        }
+      }
+    );
+
+    await Forum.updateMany({ creator: userToDelete._id }, { $set: { creator: null } });
+
+    await Promise.all([
+      Message.deleteMany({ sender: userToDelete._id }),
+      PrivateMessage.deleteMany({
+        $or: [{ sender: userToDelete._id }, { recipient: userToDelete._id }]
+      }),
+      Report.deleteMany({
+        $or: [
+          { reporter: userToDelete._id },
+          { targetType: 'post', targetId: { $in: postIds } },
+          { targetType: 'comment', targetId: { $in: commentIds } }
+        ]
+      })
+    ]);
+
+    await User.findByIdAndDelete(userToDelete._id);
+
+    res.json({
+      message: `Studierender ${userToDelete.username} wurde gelöscht`,
+      deletedUserId: String(userToDelete._id)
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
