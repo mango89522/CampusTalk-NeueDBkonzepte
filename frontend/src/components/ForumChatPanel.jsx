@@ -7,7 +7,7 @@ import { toLocalDateTime } from '../utils/format'
 
 const SOCKET_URL = API_BASE_URL.replace('/api', '')
 
-function ForumChatPanel({ forumId, token, isLoggedIn }) {
+function ForumChatPanel({ forumId, token, isLoggedIn, onForumMessage }) {
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [error, setError] = useState('')
@@ -65,7 +65,14 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
     socket.emit('join_forum', forumId)
 
     const onReceive = (message) => {
+      const messageForumId = String(message?.forumId || message?.forum?._id || message?.forum || '')
+
+      if (messageForumId && String(messageForumId) !== String(forumId)) {
+        return
+      }
+
       mergeMessages([message])
+      onForumMessage?.(message)
     }
 
     const onSocketError = (payload) => {
@@ -81,7 +88,7 @@ function ForumChatPanel({ forumId, token, isLoggedIn }) {
       socket.disconnect()
       socketRef.current = null
     }
-  }, [forumId, isLoggedIn, token, mergeMessages])
+  }, [forumId, isLoggedIn, token, mergeMessages, onForumMessage])
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })

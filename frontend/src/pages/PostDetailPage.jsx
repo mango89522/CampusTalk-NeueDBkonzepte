@@ -189,6 +189,7 @@ function PostDetailPage() {
           comments={comments}
           isLoggedIn={isLoggedIn}
           currentUserId={currentUserId}
+          isAdmin={isAdmin}
           onReply={replyToComment}
           onReport={reportComment}
           onDelete={deleteComment}
