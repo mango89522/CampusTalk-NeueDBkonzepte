@@ -4,6 +4,9 @@ import { forumApi, postApi } from '../api/services'
 import { getApiErrorMessage } from '../api/client'
 import { normalizeTagInput } from '../utils/format'
 
+const IMAGE_MAX_MB = Number(import.meta.env.VITE_MEDIA_IMAGE_MAX_MB) || 10
+const VIDEO_MAX_MB = Number(import.meta.env.VITE_MEDIA_VIDEO_MAX_MB) || 80
+
 function CreatePostPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -12,8 +15,12 @@ function CreatePostPage() {
   const [forumId, setForumId] = useState(params.get('forumId') || '')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [imageSource, setImageSource] = useState('url')
   const [imageUrl, setImageUrl] = useState('')
+  const [imageFile, setImageFile] = useState(null)
+  const [videoSource, setVideoSource] = useState('url')
   const [videoUrl, setVideoUrl] = useState('')
+  const [videoFile, setVideoFile] = useState(null)
   const [tags, setTags] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -35,18 +42,43 @@ function CreatePostPage() {
   const onSubmit = async (event) => {
     event.preventDefault()
 
+    if (imageSource === 'file' && imageFile && imageFile.size > IMAGE_MAX_MB * 1024 * 1024) {
+      setError(`Bild ist zu groß. Maximal erlaubt: ${IMAGE_MAX_MB} MB`)
+      return
+    }
+
+    if (videoSource === 'file' && videoFile && videoFile.size > VIDEO_MAX_MB * 1024 * 1024) {
+      setError(`Video ist zu groß. Maximal erlaubt: ${VIDEO_MAX_MB} MB`)
+      return
+    }
+
     try {
       setIsSubmitting(true)
       setError('')
 
-      const { data } = await postApi.create({
-        title,
-        content,
-        imageUrl,
-        videoUrl,
-        forumId,
-        tags: normalizeTagInput(tags),
-      })
+      const payload = new FormData()
+      payload.append('title', title)
+      payload.append('content', content)
+      payload.append('forumId', forumId)
+
+      const normalizedTags = normalizeTagInput(tags)
+      if (normalizedTags.length) {
+        payload.append('tags', normalizedTags.join(','))
+      }
+
+      if (imageSource === 'file' && imageFile) {
+        payload.append('image', imageFile)
+      } else if (imageSource === 'url' && imageUrl.trim()) {
+        payload.append('imageUrl', imageUrl.trim())
+      }
+
+      if (videoSource === 'file' && videoFile) {
+        payload.append('video', videoFile)
+      } else if (videoSource === 'url' && videoUrl.trim()) {
+        payload.append('videoUrl', videoUrl.trim())
+      }
+
+      const { data } = await postApi.create(payload)
 
       navigate(`/posts/${data._id}`)
     } catch (apiError) {
@@ -84,19 +116,105 @@ function CreatePostPage() {
           className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
         />
 
-        <input
-          placeholder="Bild-URL (optional)"
-          value={imageUrl}
-          onChange={(event) => setImageUrl(event.target.value)}
-          className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-        />
+        <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-3.5">
+          <p className="text-xs font-semibold tracking-wide text-neutral-600 uppercase">Bildquelle (optional)</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setImageSource('url')
+                setImageFile(null)
+              }}
+              className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                imageSource === 'url'
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                  : 'border-neutral-300 bg-white text-neutral-700 hover:border-emerald-400'
+              }`}
+            >
+              URL
+            </button>
+            <button
+              type="button"
+              onClick={() => setImageSource('file')}
+              className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                imageSource === 'file'
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                  : 'border-neutral-300 bg-white text-neutral-700 hover:border-emerald-400'
+              }`}
+            >
+              Datei
+            </button>
+          </div>
 
-        <input
-          placeholder="Video-URL (optional)"
-          value={videoUrl}
-          onChange={(event) => setVideoUrl(event.target.value)}
-          className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-        />
+          {imageSource === 'url' ? (
+            <input
+              placeholder="Bild-URL"
+              value={imageUrl}
+              onChange={(event) => setImageUrl(event.target.value)}
+              className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            />
+          ) : (
+            <div className="space-y-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => setImageFile(event.target.files?.[0] || null)}
+                className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:font-semibold file:text-emerald-800"
+              />
+              <p className="text-xs text-neutral-600">Maximal {IMAGE_MAX_MB} MB</p>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-3.5">
+          <p className="text-xs font-semibold tracking-wide text-neutral-600 uppercase">Videoquelle (optional)</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setVideoSource('url')
+                setVideoFile(null)
+              }}
+              className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                videoSource === 'url'
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                  : 'border-neutral-300 bg-white text-neutral-700 hover:border-emerald-400'
+              }`}
+            >
+              URL
+            </button>
+            <button
+              type="button"
+              onClick={() => setVideoSource('file')}
+              className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                videoSource === 'file'
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                  : 'border-neutral-300 bg-white text-neutral-700 hover:border-emerald-400'
+              }`}
+            >
+              Datei
+            </button>
+          </div>
+
+          {videoSource === 'url' ? (
+            <input
+              placeholder="Video-URL"
+              value={videoUrl}
+              onChange={(event) => setVideoUrl(event.target.value)}
+              className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            />
+          ) : (
+            <div className="space-y-1">
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(event) => setVideoFile(event.target.files?.[0] || null)}
+                className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-3 text-sm text-neutral-800 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:font-semibold file:text-emerald-800"
+              />
+              <p className="text-xs text-neutral-600">Maximal {VIDEO_MAX_MB} MB</p>
+            </div>
+          )}
+        </div>
 
         <input
           placeholder="Tags, mit Komma getrennt"

@@ -2,11 +2,15 @@
 import { Link } from 'react-router-dom'
 import { postScore, toLocalDateTime, voteCount } from '../utils/format'
 
-function PostCard({ post, onUpvote, onDownvote, onReport, canVote = false, currentUserId = '', canManage = false, editPath = '', onDelete }) {
+function PostCard({ post, onUpvote, onDownvote, onReport, canVote = false, currentUserId = '', canManage = false, editPath = '', onDelete, compact = false }) {
   const authorId = post?.author?._id || post?.author
   const isOwnPost = Boolean(currentUserId && authorId && String(currentUserId) === String(authorId))
   const hasUpvoted = (post?.upvotes || []).some((id) => String(id) === String(currentUserId))
   const hasDownvoted = (post?.downvotes || []).some((id) => String(id) === String(currentUserId))
+  const hasUploadedImage = Boolean(post?.imageMediaId && post?.imageUrl)
+  const hasUploadedVideo = Boolean(post?.videoMediaId && post?.videoUrl)
+  const hasExternalImage = Boolean(!post?.imageMediaId && post?.imageUrl)
+  const hasExternalVideo = Boolean(!post?.videoMediaId && post?.videoUrl)
 
   return (
     <article className="rounded-2xl border border-neutral-300 bg-[rgba(255,253,248,0.95)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -28,16 +32,39 @@ function PostCard({ post, onUpvote, onDownvote, onReport, canVote = false, curre
       <p className="mt-3 whitespace-pre-line text-[1.03rem] leading-relaxed text-neutral-800">{post.content}</p>
 
       {(post.imageUrl || post.videoUrl) && (
-        <div className="mt-3 flex flex-wrap gap-3 text-sm">
-          {post.imageUrl && (
-            <a className="font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2" href={post.imageUrl} target="_blank" rel="noreferrer">
-              Bild ansehen
-            </a>
+        <div className="mt-4 space-y-3">
+          {hasUploadedImage && (
+            <img
+              src={post.imageUrl}
+              alt={post.title ? `Bild zu ${post.title}` : 'Post Bild'}
+              loading="lazy"
+              decoding="async"
+              className={`mx-auto w-full rounded-xl border border-neutral-200 bg-neutral-100 object-contain ${compact ? 'max-h-80' : 'max-h-[70vh]'}`}
+            />
           )}
-          {post.videoUrl && (
-            <a className="font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2" href={post.videoUrl} target="_blank" rel="noreferrer">
-              Video ansehen
-            </a>
+          {hasUploadedVideo && (
+            <video
+              controls
+              preload={compact ? 'none' : 'metadata'}
+              className={`w-full rounded-xl border border-neutral-200 bg-black ${compact ? 'max-h-72' : 'max-h-[32rem]'}`}
+            >
+              <source src={post.videoUrl} />
+              Dein Browser unterstützt keine eingebetteten Videos.
+            </video>
+          )}
+          {(hasExternalImage || hasExternalVideo) && (
+            <div className="flex flex-wrap gap-3 text-sm">
+              {hasExternalImage && (
+                <a className="font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2" href={post.imageUrl} target="_blank" rel="noreferrer">
+                  Bild ansehen
+                </a>
+              )}
+              {hasExternalVideo && (
+                <a className="font-semibold text-emerald-800 underline decoration-emerald-300 underline-offset-2" href={post.videoUrl} target="_blank" rel="noreferrer">
+                  Video ansehen
+                </a>
+              )}
+            </div>
           )}
         </div>
       )}
