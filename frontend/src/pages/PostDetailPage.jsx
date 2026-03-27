@@ -188,6 +188,7 @@ function PostDetailPage() {
         <CommentTree
           comments={comments}
           isLoggedIn={isLoggedIn}
+          isAdmin={isAdmin}
           currentUserId={currentUserId}
           onReply={replyToComment}
           onReport={reportComment}

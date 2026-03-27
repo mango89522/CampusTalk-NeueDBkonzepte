@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { toLocalDateTime } from '../utils/format'
 
-function CommentNode({ comment, depth, isLoggedIn, currentUserId, onReply, onReport, onDelete }) {
+function CommentNode({ comment, depth, isLoggedIn, isAdmin, currentUserId, onReply, onReport, onDelete }) {
   const [replyText, setReplyText] = useState('')
   const [isReplyOpen, setIsReplyOpen] = useState(false)
   const isOwnComment = Boolean(currentUserId && String(comment.author?._id || comment.author) === String(currentUserId))
+  const canDeleteComment = isOwnComment || isAdmin
 
   const submitReply = async (event) => {
     event.preventDefault()
@@ -30,7 +31,7 @@ function CommentNode({ comment, depth, isLoggedIn, currentUserId, onReply, onRep
             >
               Antworten
             </button>
-            {!isOwnComment && (
+            {!canDeleteComment && (
               <button
                 type="button"
                 className="text-sm font-semibold text-red-700 transition hover:text-red-800"
@@ -39,7 +40,7 @@ function CommentNode({ comment, depth, isLoggedIn, currentUserId, onReply, onRep
                 Melden
               </button>
             )}
-            {isOwnComment && (
+            {canDeleteComment && (
               <button
                 type="button"
                 className="text-sm font-semibold text-red-700 transition hover:text-red-800"
@@ -73,6 +74,7 @@ function CommentNode({ comment, depth, isLoggedIn, currentUserId, onReply, onRep
           comment={reply}
           depth={depth + 1}
           isLoggedIn={isLoggedIn}
+          isAdmin={isAdmin}
           currentUserId={currentUserId}
           onReply={onReply}
           onReport={onReport}
@@ -83,7 +85,7 @@ function CommentNode({ comment, depth, isLoggedIn, currentUserId, onReply, onRep
   )
 }
 
-function CommentTree({ comments, isLoggedIn, currentUserId, onReply, onReport, onDelete }) {
+function CommentTree({ comments, isLoggedIn, isAdmin, currentUserId, onReply, onReport, onDelete }) {
   if (!comments.length) {
     return <p className="text-neutral-600">Noch keine Kommentare.</p>
   }
@@ -96,6 +98,7 @@ function CommentTree({ comments, isLoggedIn, currentUserId, onReply, onReport, o
           comment={comment}
           depth={0}
           isLoggedIn={isLoggedIn}
+          isAdmin={isAdmin}
           currentUserId={currentUserId}
           onReply={onReply}
           onReport={onReport}
