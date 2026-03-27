@@ -1,6 +1,6 @@
 # CampusTalk-NeueDBkonzepte
 
-CampusTalk kombiniert Foren (Reddit-aehnlich) mit Echtzeitkommunikation (Discord-aehnlich).
+CampusTalk kombiniert Foren (Reddit-ähnlich) mit Echtzeitkommunikation (Discord-ähnlich).
 
 ## Projektstart in Testumgebung
 
@@ -44,7 +44,7 @@ npm install
 npm run dev
 ```
 
-Standard-Port fuer Vite ist 5173.
+Standard-Port für Vite ist 5173.
 
 ## Build-Checks
 
@@ -59,3 +59,9 @@ npm run build
 
 - backend: Express, MongoDB/Mongoose, Socket.IO
 - frontend: React, Vite, Axios, React Router, Socket.IO Client
+
+## Aktueller Funktionsstand
+
+- Posts unterstützen Medien per URL oder Datei-Upload (Bild/Video) mit serverseitigen Größenlimits.
+- Hochgeladene Medien werden über `/api/media/:id` bereitgestellt.
+- Admin-Dashboard unterstützt Nutzerverwaltung inkl. Rollenwechsel und Löschen von Studierenden.

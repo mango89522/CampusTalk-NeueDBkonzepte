@@ -1340,6 +1340,32 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Delete_Student",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_campustalk}}/api/admin/users/:id",
+              "host": [
+                "{{base_url_campustalk}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },

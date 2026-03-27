@@ -120,7 +120,6 @@ function Layout() {
             <h3 className="text-base font-bold text-neutral-900">Plattform</h3>
             <div className="mt-2 flex flex-col gap-1.5 text-sm text-neutral-600">
               <Link className="hover:text-emerald-700" to="/profile">Profil</Link>
-              <Link className="hover:text-emerald-700" to="/admin">Admin</Link>
               <a className="hover:text-emerald-700" href="https://www.mongodb.com" target="_blank" rel="noreferrer">MongoDB</a>
               <a className="hover:text-emerald-700" href="https://socket.io" target="_blank" rel="noreferrer">Socket.IO</a>
             </div>
@@ -129,17 +128,20 @@ function Layout() {
 
         <div className="mt-5 flex flex-wrap justify-between gap-3 border-t border-neutral-300 pt-4 text-sm text-neutral-600">
           <p>CampusTalk · gebaut für Studierende</p>
-          <p>{new Date().getFullYear()} · Hochschule Projekt</p>
+          <p>{new Date().getFullYear()} · Hochschul Projekt</p>
         </div>
       </footer>
 
       {showToTop && (
         <button
           type="button"
-          className="fixed right-4 bottom-4 z-40 h-12 w-12 rounded-full border border-emerald-400 bg-white text-xl font-bold text-emerald-800 shadow-lg transition hover:-translate-y-0.5"
+          className="fixed right-4 bottom-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-emerald-400 bg-white text-emerald-800 shadow-lg transition hover:-translate-y-0.5"
           aria-label="Nach oben"
           onClick={scrollToTop}
         >
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
+            <path d="M6 14l6-6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
       )}
     </div>
