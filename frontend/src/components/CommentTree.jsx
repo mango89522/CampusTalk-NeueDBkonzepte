@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { toLocalDateTime } from '../utils/format'
 
-function CommentNode({ comment, depth, isLoggedIn, currentUserId, isAdmin = false, onReply, onReport, onDelete }) {
+function CommentNode({ comment, depth, isLoggedIn, isAdmin, currentUserId, onReply, onReport, onDelete }) {
   const [replyText, setReplyText] = useState('')
   const [isReplyOpen, setIsReplyOpen] = useState(false)
   const isOwnComment = Boolean(currentUserId && String(comment.author?._id || comment.author) === String(currentUserId))
-  const canDeleteComment = Boolean(isOwnComment || isAdmin)
+  const canDeleteComment = isOwnComment || isAdmin
 
   const submitReply = async (event) => {
     event.preventDefault()
@@ -74,8 +74,8 @@ function CommentNode({ comment, depth, isLoggedIn, currentUserId, isAdmin = fals
           comment={reply}
           depth={depth + 1}
           isLoggedIn={isLoggedIn}
-          currentUserId={currentUserId}
           isAdmin={isAdmin}
+          currentUserId={currentUserId}
           onReply={onReply}
           onReport={onReport}
           onDelete={onDelete}
@@ -85,7 +85,7 @@ function CommentNode({ comment, depth, isLoggedIn, currentUserId, isAdmin = fals
   )
 }
 
-function CommentTree({ comments, isLoggedIn, currentUserId, isAdmin = false, onReply, onReport, onDelete }) {
+function CommentTree({ comments, isLoggedIn, isAdmin, currentUserId, onReply, onReport, onDelete }) {
   if (!comments.length) {
     return <p className="text-neutral-600">Noch keine Kommentare.</p>
   }
@@ -98,8 +98,8 @@ function CommentTree({ comments, isLoggedIn, currentUserId, isAdmin = false, onR
           comment={comment}
           depth={0}
           isLoggedIn={isLoggedIn}
-          currentUserId={currentUserId}
           isAdmin={isAdmin}
+          currentUserId={currentUserId}
           onReply={onReply}
           onReport={onReport}
           onDelete={onDelete}
