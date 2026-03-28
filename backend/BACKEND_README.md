@@ -1,82 +1,115 @@
-# Setup
+# Backend-Dokumentation
 
-## 1. Schritt
-Im integrierten Terminal /backend `npm i` ausführen
+## Setup
+Die allgemeinen Startschritte stehen im Haupt-README:
 
-## 2. Schritt
-Env Example kopieren und neue .env machen, URL aus Web kopieren und User + Passwort durch Benutzerdaten ersetzen
+- [Projektstart im Root-README](../README.md)
 
-## 3. Schritt 
-integriertes Terminal für /backend und `npm run dev` ausführen
+Hier sind nur backend-spezifische Infos dokumentiert.
 
-## 4. Struktur
+## Aktuelle Struktur (relevante Ordner)
 ```
 backend/
-├── server.js                   
-├── utils/
-│   ├── helpers.js              
-│   └── jwt.js                  
+├── server.js
+├── package.json
 ├── middleware/
-│   ├── auth.js                 
-│   └── requireAdmin.js          
+│   ├── auth.js
+│   └── requireAdmin.js
+├── models/
+│   ├── Comment.js
+│   ├── Forum.js
+│   ├── Message.js
+│   ├── Post.js
+│   ├── PrivateMessage.js
+│   ├── Report.js
+│   └── User.js
 ├── routes/
-│   ├── auth.js                 
-│   ├── forums.js                
-│   ├── posts.js               
-│   ├── comments.js           
-│   ├── users.js                 
-│   ├── messages.js             
-│   ├── admin.js                
-│   └── media.js                
-└── sockets/
-    └── index.js                
+│   ├── admin.js
+│   ├── auth.js
+│   ├── comments.js
+│   ├── forums.js
+│   ├── media.js
+│   ├── messages.js
+│   ├── posts.js
+│   └── users.js
+├── sockets/
+│   └── index.js
+└── utils/
+    ├── gridfs.js
+    ├── helpers.js
+    ├── jwt.js
+    └── mediaUpload.js
 ```
 
-## 5. Medien-Upload (Bilder/Videos)
-- Endpoint für Upload: `POST /api/media/upload` (Auth erforderlich, `multipart/form-data`, Feldname: `file`)
-- Upload-Limits über `.env`:
-    - `MEDIA_IMAGE_MAX_MB` (Standard: 10)
-    - `MEDIA_VIDEO_MAX_MB` (Standard: 80)
+## Umgebungsvariablen
+Pflichtvariable:
+
+- `MONGODB_URI`
+
+In `.env example` bereits enthalten:
+
+- `PORT` (Standard: `5001`)
+- `MEDIA_IMAGE_MAX_MB` (Standard: `10`)
+- `MEDIA_VIDEO_MAX_MB` (Standard: `80`)
+
+Optional:
+
+- `CLIENT_ORIGIN` (kommaseparierte Origins für CORS)
+
+## Medien-Upload (Bilder/Videos)
+- Upload: `POST /api/media/upload`
+    - Auth erforderlich
+    - `multipart/form-data`
+    - Feldname: `file`
 - Dateiabruf: `GET /api/media/:id`
-- Optionales Löschen: `DELETE /api/media/:id` (Eigentümer oder Admin)
-- In Posts können zusätzlich zu `imageUrl`/`videoUrl` jetzt `imageMediaId`/`videoMediaId` gesetzt werden.
-    Die URL wird dann serverseitig als `/api/media/:id` erzeugt.
-- Posts unterstützen jetzt auch direkten Upload im selben Request:
+- Löschen: `DELETE /api/media/:id` (Eigentümer oder Admin)
+- Posts unterstützen direkten Upload im selben Request:
     - `POST /api/posts` mit `multipart/form-data`
     - `PATCH /api/posts/:id` mit `multipart/form-data`
-    - Feldnamen für Dateien: `image` und `video`
+    - Dateifelder: `image` und `video`
+- Alternativ können in Posts `imageMediaId` und `videoMediaId` gesetzt werden.
 
-## 6. Admin-Endpunkte
+## Admin-Endpunkte
 - Nutzerliste: `GET /api/admin/users`
 - Nutzerrolle ändern: `PATCH /api/admin/users/:id/role`
     - Eigene Rolle kann nicht geändert werden.
-- Studierenden löschen: `DELETE /api/admin/users/:id`
+- Studierenden-Account löschen: `DELETE /api/admin/users/:id`
     - Nur Rolle `Studierender` ist löschbar.
     - Eigener Account kann nicht gelöscht werden.
+- Meldungen abrufen: `GET /api/admin/reports`
 
-## 7. Chat starten
-1. In Postman "+" und "Socket.IO" auswählen
-2. In die URL "http://localhost:5001?token=" + jwt-Token und Connect klicken
-3. Forum beitreten: 
-    - Bei "Event name, defaults..." eingeben "join_forum"
-    - als Message die ID des Forums in ""
-4. Nachricht schreiben
-    - Bei "Event name, defaults..." eingeben: "send_message"
-    - als Message bsp. : 
-    ```
+## Private-Nachrichten (REST)
+- Konversationen: `GET /api/private-messages/conversations`
+- Nachrichten mit User: `GET /api/private-messages/:userId`
+
+## Socket.IO Events
+Verbindung mit Token (z. B. `http://localhost:5001?token=<JWT>`).
+
+Forum-Chat:
+
+- Client -> Server: `join_forum`
+    - Payload: `"<forumId>"`
+- Client -> Server: `send_message`
+    - Payload:
+        ```json
         {
-            "forumId": "69b13e3231cee15adb3be178",
-            "senderId": "69b13bee4dc5a38b2148f6f0",
-            "text": "Hallo zusammen! Ist das der Live-Chat?"
+            "forumId": "<forumId>",
+            "text": "Hallo zusammen"
         }
-    ```
-5. Privater Chat
-    - Bei "Event name, defaults..." eingeben: "register_private"
-    - als Message bsp. : 
-    ```
+        ```
+- Server -> Client: `receive_message`
+
+Privat-Chat:
+
+- Client -> Server: `register_private`
+    - Payload: keiner
+- Client -> Server: `send_private_message`
+    - Payload:
+        ```json
         {
-            "senderId": "69b13bee4dc5a38b2148f6f0",
-            "recipientId": "EINE_ANDERE_USER_ID", 
-            "text": "Hey, hast du die Zusammenfassung für Mathe?"
+            "recipientId": "<userId>",
+            "text": "Hey, hast du kurz Zeit?"
         }
-    ```
+        ```
+- Server -> Client: `receive_private_message`
+- Fehlerkanal: `socket_error`
