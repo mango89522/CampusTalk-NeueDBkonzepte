@@ -39,8 +39,8 @@ app.use(express.json());
 
 // --- DATENBANK VERBINDUNG ---
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Atlas verbunden!'))
-  .catch(err => console.error('❌ Verbindungsfehler:', err));
+  .then(() => console.log('MongoDB Atlas verbunden'))
+  .catch(err => console.error('Verbindungsfehler:', err));
 
 // --- ROUTEN ---
 app.get('/', (req, res) => res.send('CampusTalk Backend läuft!'));
@@ -78,5 +78,5 @@ setupSockets(io);
 
 // --- SERVER START ---
 server.listen(PORT, () => {
-  console.log(`🚀 Server läuft auf Port ${PORT} (mit WebSockets)`);
+  console.log(`Server läuft auf Port ${PORT} (mit WebSockets)`);
 });
