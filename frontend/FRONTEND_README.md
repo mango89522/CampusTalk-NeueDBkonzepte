@@ -5,25 +5,32 @@ React + Vite Frontend für CampusTalk.
 ## Voraussetzungen
 
 - Node.js 20+
-- Laufendes Backend auf Port 5001 (Standard)
+- Laufendes Backend (Standard: http://localhost:5001)
 
 ## Installation
 
-1. Im Ordner frontend Abhängigkeiten installieren:
+1. In den Frontend-Ordner wechseln und Abhängigkeiten installieren:
 
 ```bash
+cd frontend
 npm install
 ```
 
-2. Optional: API-URL konfigurieren über Umgebungsvariable:
+2. Optional eine `.env` im Ordner `frontend` anlegen:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:5001/api
+VITE_MEDIA_IMAGE_MAX_MB=10
+VITE_MEDIA_VIDEO_MAX_MB=80
 ```
 
-Wenn keine Variable gesetzt wird, verwendet das Frontend automatisch http://localhost:5001/api.
+Hinweise zu den Variablen:
 
-## Start
+- `VITE_API_BASE_URL`: Basis-URL für REST-Aufrufe. Fallback ohne Variable: `http://localhost:5001/api`
+- `VITE_MEDIA_IMAGE_MAX_MB`: Maximale Bildgröße (Client-Validierung), Standard: `10`
+- `VITE_MEDIA_VIDEO_MAX_MB`: Maximale Videogröße (Client-Validierung), Standard: `80`
+
+## Skripte
 
 Entwicklung:
 
@@ -37,6 +44,12 @@ Build:
 npm run build
 ```
 
+Build lokal testen:
+
+```bash
+npm run preview
+```
+
 Lint:
 
 ```bash
@@ -45,24 +58,48 @@ npm run lint
 
 ## Umgesetzte Funktionen
 
-- Gast:
-	- Öffentliche Foren und Posts lesen
-	- Suche und Filter über Suchtext und Tags
-	- Registrierung und Login
-- Studierender:
-	- Forum erstellen
-	- Post erstellen (Text, Bild/Video per URL oder Datei-Upload)
-	- Kommentare und verschachtelte Antworten
-	- Upvote/Downvote
-	- Forum-Livechat mit Socket.IO
-	- Private Nachrichten mit Socket.IO
-	- Profilansicht mit eigenen Posts
-- Administrator:
-	- Nutzerverwaltung
-	- Rollenwechsel Studierender <-> Administrator
-	- Studierende löschen (eigener Account nicht löschbar)
+### Gast
+
+- Öffentliche Foren und Posts lesen
+- Suche über Suchtext und Tags
+- Registrierung und Login
+
+### Studierender
+
+- Forum erstellen
+- Post erstellen und bearbeiten
+- Gemischte Post-Inhalte: Text, Bild/Video per URL oder Datei-Upload
+- Kommentare und verschachtelte Antworten
+- Upvote/Downvote
+- Post- und Kommentar-Meldungen (Reporting)
+- Forum abonnieren/abbestellen
+- Eigene abonnierte Foren und zugehörige neue Posts auf der Startseite
+- Forum-Livechat mit Socket.IO
+- Private Nachrichten mit Socket.IO
+- Konversationsübersicht mit Suchfunktion nach Usern
+- Unread-Badge für private Nachrichten in der Navigation
+- Profilansicht mit eigenen Posts und Foren-Abos
+
+### Administrator
+
+- Nutzerverwaltung
+- Rollenwechsel Studierender <-> Administrator (eigene Rolle nicht änderbar)
+- Studierende löschen (eigener Account nicht löschbar)
+- Gemeldete Inhalte einsehen (Posts und Kommentare)
+- Forenverwaltung inkl. Bearbeiten/Löschen
+- Post-Moderation innerhalb von Foren
+
+## Realtime und Nachrichten
+
+- Forum-Chat nutzt Socket.IO Events wie `join_forum`, `send_message`, `receive_message`.
+- Private Nachrichten nutzen `register_private`, `send_private_message`, `receive_private_message`.
+- Konversationen werden über `GET /api/private-messages/conversations` geladen.
+- Beim Öffnen einer Konversation werden Nachrichten mit dem gewählten User über `GET /api/private-messages/:userId` geladen.
+- Ungelesene Nachrichten werden im Frontend periodisch aktualisiert und als Badge angezeigt.
 
 ## Hinweise
 
-- Für private Nachrichten gibt es im aktuellen Backend keinen öffentlichen Endpoint für eine komplette User-Liste. Deshalb nutzt das Frontend bekannte Kontakte (z. B. aus Posts/Interaktionen), um Konversationen zu starten.
-- Die NoSQL-Stärken werden im Frontend sichtbar durch flexible Tags, gemischte Inhaltsformate (Text/Bild/Video) und hohe Schreibfrequenz in Chat/Kommentaren.
+- Beim Erstellen/Bearbeiten von Posts pro Medium nur eine Quelle senden:
+  - Bild: `image` oder `imageUrl`
+  - Video: `video` oder `videoUrl`
+- Für den Direktstart einer privaten Unterhaltung wird aus der Post-Detailseite auf `/messages?userId=<id>&username=<name>` verlinkt.
