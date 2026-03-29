@@ -56,6 +56,53 @@ Lint:
 npm run lint
 ```
 
+## Aktuelle Struktur (relevante Ordner)
+```
+frontend/
+├── index.html
+├── package.json
+├── vite.config.js
+├── eslint.config.js
+├── FRONTEND_README.md
+├── public/
+└── src/
+  ├── main.jsx
+  ├── App.jsx
+  ├── index.css
+  ├── App.css
+  ├── api/
+  │   ├── client.js
+  │   └── services.js
+  ├── assets/
+  ├── components/
+  │   ├── CommentTree.jsx
+  │   ├── ForumChatPanel.jsx
+  │   ├── Layout.jsx
+  │   ├── PostCard.jsx
+  │   └── ProtectedRoute.jsx
+  ├── context/
+  │   ├── auth-context.js
+  │   └── AuthContext.jsx
+  ├── hooks/
+  │   └── useAuth.js
+  ├── pages/
+  │   ├── AdminPage.jsx
+  │   ├── CreateForumPage.jsx
+  │   ├── CreatePostPage.jsx
+  │   ├── EditPostPage.jsx
+  │   ├── ForumDetailPage.jsx
+  │   ├── HomePage.jsx
+  │   ├── LoginPage.jsx
+  │   ├── NotFoundPage.jsx
+  │   ├── PostDetailPage.jsx
+  │   ├── PrivateMessagesPage.jsx
+  │   ├── ProfilePage.jsx
+  │   └── RegisterPage.jsx
+  └── utils/
+    ├── chatPeers.js
+    └── format.js
+```
+
 ## Umgesetzte Funktionen
 
 ### Gast
